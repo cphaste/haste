@@ -1,0 +1,14 @@
+# visual studio build and settings files
+*.sln
+*.vcproj
+*.user
+*.ncb
+*.suo
+
+# unix makefiles
+Makefile
+*.make
+
+# binaries and object files
+/bin/*
+/obj/*
