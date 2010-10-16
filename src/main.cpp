@@ -14,12 +14,12 @@ int main(int argc, char *argv[]) {
     luaL_openlibs(L);
     
     // load the script
-    //luaL_dofile(lua, argv[1]);
+    luaL_dofile(L, argv[1]);
 
     // call saySomething()
-    //luabind::call_function<void>(lua, "saySomething", "This string is in C++");
+    luabind::call_function<void>(L, "saySomething", "This string is in C++");
     
-    printf("Heeyoooo!\n");
+    printf("Goodbye from C++\n");
 
     return EXIT_SUCCESS;
 }
