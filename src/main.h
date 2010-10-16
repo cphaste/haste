@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lua/lua.hpp"
-#include "luabind/luabind.hpp"
+#include <lua/lua.hpp>
+#include <luabind/luabind.hpp>
+#include <cuda_runtime_api.h>
 
 #endif

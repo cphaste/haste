@@ -1,6 +1,17 @@
 -- Premake script for generating build scripts
 -- see http://industriousone.com/premake for more info
 
+-- handy function for determining if we're on a 64-bit system (LINUX ONLY!)
+function sixtyFourBits()
+    local f = assert(io.popen("uname -m", "r"))
+    local s = assert(f:read("*a"))
+    f:close()
+    if string.find(s, "64", 0, true) ~= nil then
+        return true
+    end
+    return false
+end
+
 -- rebuild our libs if we're on linux
 if _ACTION ~= "clean" and _ACTION ~= "cleanlibs" and os.get() == "linux" then
     os.execute("./lib/src/buildlibs.sh")
@@ -29,6 +40,12 @@ solution "cudart"
     -- Global Linux settings
     configuration "linux"
         defines { "LINUX" }
+        includedirs { "/usr/local/cuda/include" }
+        if sixtyFourBits() then
+            libdirs { "/usr/local/cuda/lib64" }
+        else
+            libdirs { "/usr/local/cuda/lib" }
+        end
         
     -- Haste project
     project "haste"
@@ -43,7 +60,8 @@ solution "cudart"
         links {
             "m",
             "lua",
-            "luabind"
+            "luabind",
+            "cudart"
         }
         uuid "56bdc40e-793c-4d8b-aeb0-ec1213fc391c"
 
