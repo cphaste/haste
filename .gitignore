@@ -12,3 +12,9 @@ Makefile
 # binaries and object files
 /bin/*
 /obj/*
+
+# linux libs autobuilding
+lib/linux/*.a
+lib/src/lua-5.1.4/src/*.o
+lib/src/lua-5.1.4/src/lua*
+lib/src/lua-5.1.4/src/liblua.a
