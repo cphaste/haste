@@ -15,6 +15,15 @@
 
 # linux libs autobuilding
 /lib/linux/*.a
-/lib/src/lua-5.1.4/src/*.o
-/lib/src/lua-5.1.4/src/lua*
-/lib/src/lua-5.1.4/src/liblua.a
+/lib/src/LuaJIT-2.0.0-beta5/src/*.o
+/lib/src/LuaJIT-2.0.0-beta5/lib/vmdef.lua
+/lib/src/LuaJIT-2.0.0-beta5/src/buildvm
+/lib/src/LuaJIT-2.0.0-beta5/src/libluajit.a
+/lib/src/LuaJIT-2.0.0-beta5/src/libluajit.so
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_bcdef.h
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_ffdef.h
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_folddef.h
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_libdef.h
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_recdef.h
+/lib/src/LuaJIT-2.0.0-beta5/src/lj_vm.s
+/lib/src/LuaJIT-2.0.0-beta5/src/luajit

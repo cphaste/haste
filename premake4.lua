@@ -23,7 +23,7 @@ solution "cudart"
     -- Global debug settings
     configuration "Debug"
         defines { "DEBUG" }
-        flags { "Symbols", "FloatFast", "ExtraWarnings", "EnableSSE2", "NoPCH" }
+        flags { "Symbols", "ExtraWarnings", "EnableSSE2", "NoPCH" }
         targetdir "bin/Debug"
         
     -- Global release settings
@@ -59,7 +59,7 @@ solution "cudart"
         }
         links {
             "m",
-            "lua",
+            "luajit",
             "luabind",
             "cudart"
         }
@@ -75,7 +75,7 @@ solution "cudart"
             "luabind/**.cpp"
         }
         links {
-            "lua"
+            "luajit"
         }
         uuid "cb2de148-1c2e-45ff-a558-f3eda7889614"
 
