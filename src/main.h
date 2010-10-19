@@ -8,4 +8,6 @@
 #include <luabind/luabind.hpp>
 #include <cuda_runtime_api.h>
 
+#include "add.cu.h"
+
 #endif

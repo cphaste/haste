@@ -13,11 +13,17 @@ function sixtyFourBits()
     return false
 end
 
--- rebuild our libs if we're on linux
-if _ACTION ~= "clean" and _ACTION ~= "cleanlibs" and os.get() == "linux" then
-    os.execute("./lib/src/buildlibs.sh")
+-- generate nvcc prebuild commands for each .cu file, and file entries
+-- for the generated .cu.cpp files
+nvcccmds = {}
+genfiles = {}
+for i, cufile in ipairs(os.matchfiles("src/**.cu")) do
+    local genfile = cufile .. ".cpp"
+    table.insert(nvcccmds, "nvcc -cuda " .. cufile .. " -o " .. genfile)
+    table.insert(genfiles, genfile)
 end
 
+-- global solution
 solution "cudart"
     configurations { "Debug", "Release" }
     
@@ -57,37 +63,53 @@ solution "cudart"
         includedirs { "include" }
         libdirs { "lib/" .. os.get() }
         files {
-            "src/**.cpp"
+            "src/**.cpp",
+            genfiles
         }
         links {
             "luajit",
             "luabind",
             "cudart"
         }
+        prebuildcommands {nvcccmds}
         uuid "56bdc40e-793c-4d8b-aeb0-ec1213fc391c"
 
-    -- luabind static library
-    project "luabind"
-        kind "StaticLib"
-        language "C++"
-        targetname "luabind"
-        includedirs { "include" }
-		libdirs { "lib/" .. os.get() }
-        files {
-            "luabind/**.cpp"
-        }
-        links {
-            "luajit"
-        }
-        uuid "cb2de148-1c2e-45ff-a558-f3eda7889614"
+-- custom action for building linux libraries
+newaction {
+    trigger = "buildlibs",
+    description = "Build all libraries natively on Linux",
+    execute = function() 
+        if os.get() == "linux" then
+            os.execute("./lib/src/buildlibs.sh")
+        else
+            print("Libraries are prebuilt for Win32. No build necessary.")
+        end
+    end
+}
 
--- additional actions
+-- custom action for cleaning linux libraries
+newaction {
+    trigger = "cleanlibs",
+    description = "Clean all native-built libraries on Linux",
+    execute = function ()
+        if os.get() == "linux" then
+            os.execute("./lib/src/cleanlibs.sh")
+        else
+            print("Libraries are prebuilt for Win32. No need to clean.")
+        end
+    end
+}
+
+-- additional commands for "clean" action
 if _ACTION == "clean" then
+    -- remove any auto-generated CUDA .cu.cpp files
+    print("Removing auto-generated CUDA source files...")
+    for i, genfile in ipairs(os.matchfiles("src/**.cu.cpp")) do
+        os.remove(genfile)
+    end
+
     -- remove bin and obj directories and their contents
     print("Removing bin/ and obj/ directories...")
     os.rmdir("bin")
     os.rmdir("obj")
-elseif _ACTION == "cleanlibs" and os.get() == "linux" then
-    -- clean up the autobuilt libraries
-    os.execute("./lib/src/cleanlibs.sh")
 end

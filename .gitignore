@@ -13,6 +13,9 @@
 /bin/*
 /obj/*
 
+# cuda cpp generated files
+*.cu.cpp
+
 # linux libs autobuilding
 /lib/linux/*.a
 /lib/src/LuaJIT-2.0.0-beta5/src/*.o
@@ -27,3 +30,5 @@
 /lib/src/LuaJIT-2.0.0-beta5/src/lj_recdef.h
 /lib/src/LuaJIT-2.0.0-beta5/src/lj_vm.s
 /lib/src/LuaJIT-2.0.0-beta5/src/luajit
+/lib/src/luabind-0.9.1/src/*.o
+/lib/src/luabind-0.9.1/src/libluabind.a

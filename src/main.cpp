@@ -86,5 +86,48 @@ int main(int argc, char *argv[]) {
 
     printf("\nTotal CUDA Cores: %d\n", totalCoreCount);
 
+    // run a cuda test on device 0
+    if (deviceCount > 0) {
+        printf("Selecting CUDA device #0... ");
+        if (cudaSetDevice(0) != cudaSuccess) {
+            fprintf(stderr, "ERROR: Problem with cudaSetDevice!\n");
+            exit(EXIT_FAILURE);
+        };
+        printf("OK!\n");
+
+        int c;
+        int *dev_c;
+
+        // allocate some memory on the device
+        printf("Allocating memory on the device... ");
+        if (cudaMalloc((void **)&dev_c, sizeof(int)) != cudaSuccess) {
+            fprintf(stderr, "ERROR: Failure in cudaMalloc!\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("OK!\n");
+
+        // run a test kernel on the device
+        printf("Running a test kernel on the device... ");
+        gpu::Add(2, 7, dev_c);
+        if (cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost) != cudaSuccess) {
+            fprintf(stderr, "ERROR: Failure in cudaMemcpy!\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("2 + 7 = %d ", c);
+        if (c == 9) {
+            printf("OK!\n");
+        } else {
+            printf("fail\n");
+        }
+
+        // free some memory on the device
+        printf("Freeing memory on the device... ");
+        if (cudaFree(dev_c) != cudaSuccess) {
+            fprintf(stderr, "ERROR: Failure in cudaFree!\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("OK!\n");
+    }
+
     return EXIT_SUCCESS;
 }
