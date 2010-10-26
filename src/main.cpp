@@ -1,7 +1,7 @@
 #include "main.h"
 
 // Beginning of GPU Architecture definitions
-inline int ConvertSMVer2Cores(int major, int minor)
+/*inline int ConvertSMVer2Cores(int major, int minor)
 {
     // Defines for GPU Architecture types (using the SM version to determine the # of cores per SM
     typedef struct {
@@ -29,7 +29,7 @@ inline int ConvertSMVer2Cores(int major, int minor)
     printf("MapSMtoCores undefined SMversion %d.%d!\n", major, minor);
     return -1;
 }
-// end of GPU Architecture definitions
+// end of GPU Architecture definitions*/
 
 int main(int argc, char *argv[]) {
     // check arguments
@@ -38,7 +38,14 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     
-    // create lua state
+    LuaScene lua_scene(argv[1]);
+    lua_scene.Import();
+
+    printf("Render config:\n");
+    printf("\tWidth: %d\n", global::render.width);
+    printf("\tHeight: %d\n", global::render.height);
+
+    /*// create lua state
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
     
@@ -48,7 +55,18 @@ int main(int argc, char *argv[]) {
     // call saySomething()
     luabind::call_function<void>(L, "saySomething", "This string is in C++");
     
-    printf("Checking for CUDA devices...");
+    luabind::object table = luabind::globals(L)["render_config"];
+    if (luabind::type(table) == LUA_TTABLE) {
+        for (luabind::iterator i(luabind::globals(L)["render_config"]), end; i != end; ++i) {
+            printf("Key is: '%s'\n", luabind::object_cast<const char *>(i.key()));
+        }
+    } else {
+        printf("Not a table!\n");
+    }*/
+
+
+
+    /*printf("Checking for CUDA devices...");
 
     int deviceCount = 0;
     if (cudaGetDeviceCount(&deviceCount) != cudaSuccess) {
@@ -81,6 +99,10 @@ int main(int argc, char *argv[]) {
 
             float mem = deviceProp.totalGlobalMem / 1024.0 / 1024.0;
             printf("\tAvailable Memory: %.2f MB\n", mem);
+
+            printf("\tMax Threads Per Block: %d\n", deviceProp.maxThreadsPerBlock);
+            printf("\tBlock Dimensions: %d x %d x %d threads\n", deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
+            printf("\tGrid Dimensions: %d x %d x %d blocks\n", deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
         }
     }
 
@@ -127,7 +149,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
         printf("OK!\n");
-    }
+    }*/
 
     return EXIT_SUCCESS;
 }

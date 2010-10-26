@@ -60,7 +60,7 @@ solution "cudart"
         kind "ConsoleApp"
         language "C++"
         targetname "haste"
-        includedirs { "include" }
+        includedirs { "include", "src" }
         libdirs { "lib/" .. os.get() }
         files {
             "src/**.cpp",
