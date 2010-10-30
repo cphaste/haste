@@ -1,5 +1,3 @@
 #include "global.h"
 
-namespace global {
-    rendercfg_t render;
-}
+Render global::render = DEFAULT_RENDER;

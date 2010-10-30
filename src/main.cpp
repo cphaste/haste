@@ -37,13 +37,15 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <main.lua>\n", argv[0]);
         return EXIT_FAILURE;
     }
-    
-    LuaScene lua_scene(argv[1]);
-    lua_scene.Import();
+   
+    // load the script (scene file)
+    scene::lstate = scripting::Init();
+    scripting::Load(scene::lstate, argv[1]);
 
     printf("Render config:\n");
-    printf("\tWidth: %d\n", global::render.width);
-    printf("\tHeight: %d\n", global::render.height);
+    printf("\tWidth: %d\n", global::render.size.x);
+    printf("\tHeight: %d\n", global::render.size.y);
+
 
     /*// create lua state
     lua_State *L = luaL_newstate();

@@ -19,7 +19,7 @@ nvcccmds = {}
 genfiles = {}
 for i, cufile in ipairs(os.matchfiles("src/**.cu")) do
     local genfile = cufile .. ".cpp"
-    table.insert(nvcccmds, "nvcc -cuda " .. cufile .. " -o " .. genfile)
+    table.insert(nvcccmds, "nvcc -cuda -arch=sm_11 " .. cufile .. " -o " .. genfile)
     table.insert(genfiles, genfile)
 end
 
@@ -55,11 +55,12 @@ solution "cudart"
             libdirs { "/usr/local/cuda/lib" }
         end
         
-    -- haste project
+    -- haste project (GPU)
     project "haste"
         kind "ConsoleApp"
         language "C++"
         targetname "haste"
+        defines { "HASTE" }
         includedirs { "include", "src" }
         libdirs { "lib/" .. os.get() }
         files {
@@ -68,11 +69,25 @@ solution "cudart"
         }
         links {
             "luajit",
-            "luabind",
             "cudart"
         }
         prebuildcommands {nvcccmds}
         uuid "56bdc40e-793c-4d8b-aeb0-ec1213fc391c"
+
+    project "waste"
+        kind "ConsoleApp"
+        language "C++"
+        targetname "waste"
+        defines { "WASTE" }
+        includedirs { "include", "src" }
+        libdirs { "lib/" .. os.get() }
+        files {
+            "src/**.cpp"
+        }
+        links {
+            "luajit",
+        }
+        uuid "87035970-e404-11df-bccf-0800200c9a66"
 
 -- custom action for building linux libraries
 newaction {
