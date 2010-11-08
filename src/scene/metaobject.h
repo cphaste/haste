@@ -1,16 +1,14 @@
-#ifndef UTIL_METAOBJECT_H_
-#define UTIL_METAOBJECT_H_
+#ifndef SCENE_METAOBJECT_H_
+#define SCENE_METAOBJECT_H_
 
 #include <stdint.h>
 
 #include "objtypes.h"
 
-struct MetaObject {
-    uint32_t id;
+typedef struct MetaObject {
+    uint64_t id;
     ObjType type;
-    void *ptr;
-};
+	uint64_t offset;
+} MetaObject;
 
-typedef struct MetaObject MetaObject;
-
-#endif // UTIL_METAOBJECT_H_
+#endif // SCENE_METAOBJECT_H_

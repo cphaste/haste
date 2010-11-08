@@ -1,20 +1,34 @@
-# visual studio build and settings files
-*.sln
-*.vcproj
-*.user
-*.ncb
+# visual studio 2010 stuff
+*.opensdf
+*.sdf
 *.suo
+*.user
+*.pdb
+/ipch
 
-# unix makefiles
-/Makefile
-/*.make
+# generated makefiles
+/Makefile.debug
+/Makefile.release
 
 # binaries and object files
 /bin/*
 /obj/*
+*.o
 
 # cuda cpp generated files
 *.cu.cpp
+
+# vim swap files
+*.swp
+
+# ctags db files
+tags
+
+# cuda kernel binaries
+*.cubin
+
+# targa output files
+*.tga
 
 # linux libs autobuilding
 /lib/linux/*.a

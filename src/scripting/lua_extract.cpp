@@ -8,9 +8,19 @@ void lua_extract_render(lua_State *L, int index, Render *dest) {
     if (lua_isnil(L, -1)) {
         dest->size = DEFAULT_RENDER.size;
     } else {
-        lua_extract_int2(L, -1, &((*dest).size));
+        lua_extract_ushort2(L, -1, &((*dest).size));
     }
     lua_pop(L, 1);
+
+    // extract max_bounces
+    lua_getfield(L, index, "max_bounces");
+    if (lua_isnil(L, -1)) {
+        dest->max_bounces = DEFAULT_RENDER.max_bounces; 
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as max_bounces element of Render value");
+        dest->max_bounces = (uint64_t)lua_tonumber(L, -1);
+        if (dest->max_bounces < 1) luaL_error(L, "max_bounces cannot be less than 1");
+    }
 }
 
 void lua_extract_float2(lua_State *L, int index, float2 *dest) {
@@ -19,13 +29,13 @@ void lua_extract_float2(lua_State *L, int index, float2 *dest) {
     // extract x value
     lua_rawgeti(L, index, 1);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of float2 value");
-    dest->x = (float) lua_tonumber(L, -1);
+    dest->x = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract y value
     lua_rawgeti(L, index, 2);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of float2 value");
-    dest->y = (float) lua_tonumber(L, -1);
+    dest->y = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
 }
 
@@ -35,19 +45,19 @@ void lua_extract_float3(lua_State *L, int index, float3 *dest) {
     // extract x value
     lua_rawgeti(L, index, 1);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of float3 value");
-    dest->x = (float) lua_tonumber(L, -1);
+    dest->x = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract y value
     lua_rawgeti(L, index, 2);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of float3 value");
-    dest->y = (float) lua_tonumber(L, -1);
+    dest->y = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract z value
     lua_rawgeti(L, index, 3);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as third element of float3 value");
-    dest->z = (float) lua_tonumber(L, -1);
+    dest->z = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
 }
 
@@ -57,91 +67,41 @@ void lua_extract_float4(lua_State *L, int index, float4 *dest) {
     // extract x value
     lua_rawgeti(L, index, 1);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of float4 value");
-    dest->x = (float) lua_tonumber(L, -1);
+    dest->x = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract y value
     lua_rawgeti(L, index, 2);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of float4 value");
-    dest->y = (float) lua_tonumber(L, -1);
+    dest->y = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract z value
     lua_rawgeti(L, index, 3);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as third element of float4 value");
-    dest->z = (float) lua_tonumber(L, -1);
+    dest->z = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
     
     // extract w value
     lua_rawgeti(L, index, 4);
     if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as fourth element of float4 value");
-    dest->w = (float) lua_tonumber(L, -1);
+    dest->w = (float)lua_tonumber(L, -1);
     lua_pop(L, 1);
 }
 
-void lua_extract_int2(lua_State *L, int index, int2 *dest) {
-    if (!lua_istable(L, index)) luaL_error(L, "expected table for int2 value");
+void lua_extract_ushort2(lua_State *L, int index, ushort2 *dest) {
+    if (!lua_istable(L, index)) luaL_error(L, "expected table for ushort2 value");
 
     // extract x value
     lua_rawgeti(L, index, 1);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of int2 value");
-    dest->x = (int32_t) lua_tonumber(L, -1);
+    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of ushort2 value");
+    dest->x = (uint16_t)lua_tonumber(L, -1);
     lua_pop(L, 1);
-    
+
     // extract y value
     lua_rawgeti(L, index, 2);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of int2 value");
-    dest->y = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-}
-
-void lua_extract_int3(lua_State *L, int index, int3 *dest) {
-    if (!lua_istable(L, index)) luaL_error(L, "expected table for int3 value");
-
-    // extract x value
-    lua_rawgeti(L, index, 1);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of int3 value");
-    dest->x = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-    
-    // extract y value
-    lua_rawgeti(L, index, 2);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of int3 value");
-    dest->y = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-    
-    // extract z value
-    lua_rawgeti(L, index, 3);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as third element of int3 value");
-    dest->z = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-}
-
-void lua_extract_int4(lua_State *L, int index, int4 *dest) {
-    if (!lua_istable(L, index)) luaL_error(L, "expected table for int4 value");
-
-    // extract x value
-    lua_rawgeti(L, index, 1);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as first element of int4 value");
-    dest->x = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-    
-    // extract y value
-    lua_rawgeti(L, index, 2);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of int4 value");
-    dest->y = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-    
-    // extract z value
-    lua_rawgeti(L, index, 3);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as third element of int4 value");
-    dest->z = (int32_t) lua_tonumber(L, -1);
-    lua_pop(L, 1);
-    
-    // extract w value
-    lua_rawgeti(L, index, 4);
-    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as fourth element of int4 value");
-    dest->w = (int32_t) lua_tonumber(L, -1);
+    if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as second element of ushort2 value");
+    dest->y = (uint16_t)lua_tonumber(L, -1);
     lua_pop(L, 1);
 }
 
@@ -163,7 +123,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->emissive = DEFAULT_SURFACE.emissive;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as emissive element of Surface value");
-        dest->emissive = (float) lua_tonumber(L, -1);
+        dest->emissive = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -173,7 +133,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->ambient = DEFAULT_SURFACE.ambient;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ambient element of Surface value");
-        dest->ambient = (float) lua_tonumber(L, -1);
+        dest->ambient = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -183,7 +143,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->diffuse = DEFAULT_SURFACE.diffuse;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as diffuse element of Surface value");
-        dest->diffuse = (float) lua_tonumber(L, -1);
+        dest->diffuse = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -193,7 +153,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->specular = DEFAULT_SURFACE.specular;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as specular element of Surface value");
-        dest->specular = (float) lua_tonumber(L, -1);
+        dest->specular = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -203,7 +163,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->shininess = DEFAULT_SURFACE.shininess;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as shininess element of Surface value");
-        dest->shininess = (float) lua_tonumber(L, -1);
+        dest->shininess = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -213,7 +173,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->reflective = DEFAULT_SURFACE.reflective;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as reflective element of Surface value");
-        dest->reflective = (float) lua_tonumber(L, -1);
+        dest->reflective = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -223,7 +183,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->transmissive = DEFAULT_SURFACE.transmissive;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as transmissive element of Surface value");
-        dest->transmissive = (float) lua_tonumber(L, -1);
+        dest->transmissive = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     
@@ -233,7 +193,7 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
         dest->ior = DEFAULT_SURFACE.ior;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ior element of Surface value");
-        dest->ior = (float) lua_tonumber(L, -1);
+        dest->ior = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
 }
@@ -256,7 +216,7 @@ void lua_extract_sphere(lua_State *L, int index, Sphere *dest) {
         dest->radius = DEFAULT_SPHERE.radius;
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as radius element of Sphere value");
-        dest->radius = (float) lua_tonumber(L, -1);
+        dest->radius = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
     

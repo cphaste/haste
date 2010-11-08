@@ -1,11 +1,8 @@
-#ifndef UTIL_OBJTYPES_H_
-#define UTIL_OBJTYPES_H_
+#ifndef SCENE_OBJTYPES_H_
+#define SCENE_OBJTYPES_H_
 
-enum ObjType {
-    SPHERE,
-    // TODO: add more here
-};
+typedef enum ObjType {
+    SPHERE
+} ObjType;
 
-typedef enum ObjType ObjType;
-
-#endif // UTIL_OBJTYPES_H_
+#endif // SCENE_OBJTYPES_H_

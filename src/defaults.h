@@ -2,16 +2,26 @@
 #define DEFAULTS_H_
 
 #include "util/render.h"
+#include "util/camera.h"
 #include "util/surface.h"
 #include "scene/sphere.h"
 
 extern "C" {
     const Render DEFAULT_RENDER = {
-        {640, 480}             // size
+        {640, 480},             // size
+        1                       // max_bounces
+    };
+
+    const Camera DEFAULT_CAMERA = {
+        {0.0f, 0.0f, 10.0f},    // eye position
+        {0.0f, 0.0f, 0.0f},     // look at position
+        {0.0f, 1.0f, 0.0f},     // up direction
+        0.0f,                   // gaze vector rotation
+        4.0f / 3.0f             // aspect ratio
     };
 
     const Surface DEFAULT_SURFACE = {
-        {0.0f, 0.0f, 0.0f},     // color
+        {1.0f, 1.0f, 1.0f},     // color
         0.0f,                   // emissive
         0.2f,                   // ambient
         0.6f,                   // diffuse
@@ -23,7 +33,7 @@ extern "C" {
     };
 
     const Sphere DEFAULT_SPHERE = {
-        {0.0f, 0.0f, 0.3f},     // position
+        {0.0f, 0.0f, 0.0f},     // position
         1.0f,                   // radius
         DEFAULT_SURFACE,        // surface
     };
