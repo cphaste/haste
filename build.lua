@@ -127,7 +127,7 @@ if mode == "clean" then
     print("========== CLEANING EVERYTHING ==========")
 
     -- remove object files
-    os.execute("rm " .. objdir .. "/*")
+    os.execute("rm " .. objdir .. "/*.o")
 
     -- remove binaries
     os.execute("rm " .. bin.debug .. " " .. bin.release)

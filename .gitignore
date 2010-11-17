@@ -12,7 +12,7 @@
 
 # binaries and object files
 /bin/*
-/obj/*
+/obj/*.o
 *.o
 
 # cuda cpp generated files

@@ -1,0 +1,3 @@
+This directory holds compiled object files. Anything you
+leave in here will be removed automatically when the
+project is cleaned!
