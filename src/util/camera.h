@@ -12,3 +12,4 @@ typedef struct Camera {
 } Camera;
 
 #endif // UTIL_CAMERA_H_
+

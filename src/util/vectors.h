@@ -73,3 +73,4 @@ inline float3 normalize(const float3 &v) {
 }
 
 #endif // UTIL_VECTORS_H_
+

@@ -79,10 +79,10 @@ void host::QueryDevices() {
         float mem_size = device_prop.totalGlobalMem / 1024.0f / 1024.0f;
 
         // max out the number of threads per stream processor
-        //num_threads = device_prop.maxThreadsPerBlock;
+        num_threads = device_prop.maxThreadsPerBlock;
         // FOR SOME STRANGE REASON WE CAN'T GO OVER 320 THREADS PER BLOCK
         // IT RUNS, BUT GENERATES BLANK OUTPUT. WTF.
-        num_threads = 256;
+        //num_threads = 512;
 
         // launch twice as many blocks as stream processors
         num_blocks = device_prop.multiProcessorCount * 2;

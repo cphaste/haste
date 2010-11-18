@@ -67,6 +67,8 @@ int main(int argc, char *argv[]) {
         // copy the trace parameters to the device
         device::CopyTraceParamsToDevice(&params);
 
+        printf("<threads, blocks, rays> = <%d, %d, %d>\n", host::num_threads, host::num_blocks, num_rays);
+
         // launch the kernel
         device::RayTrace<<<host::num_blocks, host::num_threads>>>(device::trace_params);
 
