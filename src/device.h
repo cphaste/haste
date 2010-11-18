@@ -14,6 +14,7 @@
 
 namespace device {
     extern MetaObject *meta_chunk; // base pointer to the device's meta chunk
+    extern uint64_t *light_list; // base pointer to the host's list of light-emitting objects
     extern void *obj_chunk; // base pointer to the device's object chunk
     extern float3 *layer_buffers; // base pointer to all the device's layer buffers
     extern Ray *ray_packet; // base pointer to the device's ray packet

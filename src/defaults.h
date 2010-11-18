@@ -4,6 +4,7 @@
 #include "util/render.h"
 #include "util/camera.h"
 #include "util/surface.h"
+#include "scene/light.h"
 #include "scene/sphere.h"
 
 extern "C" {
@@ -31,6 +32,11 @@ extern "C" {
         0.0f,                   // transmissive
         1.0f                    // ior
     };
+
+	const Light DEFAULT_LIGHT = {
+		{10.0f, 10.0f, 10.0f},	// position
+		{1.0f, 1.0f, 1.0f},		// color
+	};
 
     const Sphere DEFAULT_SPHERE = {
         {0.0f, 0.0f, 0.0f},     // position

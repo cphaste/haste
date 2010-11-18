@@ -1,6 +1,7 @@
 #include "device.h"
 
 MetaObject *device::meta_chunk = NULL;
+uint64_t *device::light_list = NULL;
 void *device::obj_chunk = NULL;
 float3 *device::layer_buffers = NULL;
 Ray *device::ray_packet = NULL;
@@ -49,6 +50,12 @@ void device::CopySceneToDevice() {
     // copy the meta chunk to the device
     CUDA_SAFE_CALL(cudaMemcpy(meta_chunk, host::meta_chunk, sizeof(MetaObject) * host::num_objs, cudaMemcpyHostToDevice));
     
+    // allocate space for the light list on the device
+    CUDA_SAFE_CALL(cudaMalloc<uint64_t>(&light_list, sizeof(uint64_t) * host::num_lights));
+    
+    // copy the light list to the device
+    CUDA_SAFE_CALL(cudaMemcpy(light_list, host::light_list, sizeof(uint64_t) * host::num_lights, cudaMemcpyHostToDevice));
+    
     // allocate space on the device for the object chunk
     CUDA_SAFE_CALL(cudaMalloc(&obj_chunk, host::obj_chunk_size));
 
@@ -61,6 +68,10 @@ void device::RemoveSceneFromDevice() {
     if (meta_chunk != NULL) {
     	CUDA_SAFE_CALL(cudaFree(meta_chunk));
     	meta_chunk = NULL;
+   	}
+   	if (light_list != NULL) {
+   		CUDA_SAFE_CALL(cudaFree(light_list));
+   		light_list = NULL;
    	}
     if (obj_chunk != NULL) {
     	CUDA_SAFE_CALL(cudaFree(obj_chunk));

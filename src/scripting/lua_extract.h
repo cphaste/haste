@@ -8,6 +8,8 @@
 #include "defaults.h"
 #include "util/render.h"
 #include "util/surface.h"
+#include "util/camera.h"
+#include "scene/light.h"
 #include "scene/sphere.h"
 
 // render config extraction
@@ -22,7 +24,11 @@ void lua_extract_ushort2(lua_State *L, int index, ushort2 *dest);
 // surface extraction
 void lua_extract_surface(lua_State *L, int index, Surface *dest);
 
+// camera extraction
+void lua_extract_camera(lua_State *L, int index, Camera *dest);
+
 // geometry extraction
+void lua_extract_light(lua_State *L, int index, Light *dest);
 void lua_extract_sphere(lua_State *L, int index, Sphere *dest);
 
 #endif // SCRIPTING_LUA_EXTRACT_H_

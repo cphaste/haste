@@ -3,6 +3,12 @@ render {
     max_bounces = 3
 }
 
+camera {
+	eye = {0, 3, 10}
+}
+
+lt = light {}
+
 ball = sphere {
     position = {-3, 0, 0},
     radius = 1,

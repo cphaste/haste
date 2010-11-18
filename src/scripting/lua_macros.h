@@ -12,7 +12,11 @@
 // render configuration extraction
 int lua_macro_render(lua_State *L);
 
+// camera configuration extraction
+int lua_macro_camera(lua_State *L);
+
 // geometry extractions
+int lua_macro_light(lua_State *L);
 int lua_macro_sphere(lua_State *L);
 
 #endif // SCRIPTING_LUA_MACROS_H_

@@ -21,7 +21,9 @@ namespace host {
     extern Camera camera; // scene camera
     extern lua_State *lstate; // global lua interpreter state
     extern uint64_t num_objs; // number of objects in the scene
+    extern uint64_t num_lights; // number of light emitting objects in the scene
     extern MetaObject *meta_chunk; // base pointer to the host's meta chunk
+    extern uint64_t *light_list; // base pointer to the host's list of light-emitting objects
     extern void *obj_chunk; // base pointer to the host's object chunk
     extern uint64_t obj_chunk_size; // current size (in bytes) of the host's object chunk)
     extern std::queue<Ray *> ray_queue; // queue of rays to be traced
@@ -40,7 +42,7 @@ namespace host {
         memcpy(dest, obj, sizeof(T));
 
         // allocate a new metaobject
-        meta_chunk = (MetaObject *) realloc(meta_chunk, (num_objs + 1) * sizeof(MetaObject));
+        meta_chunk = (MetaObject *)realloc(meta_chunk, (num_objs + 1) * sizeof(MetaObject));
 
         // calculate id and populate meta object
         uint64_t id = num_objs++;
@@ -53,6 +55,9 @@ namespace host {
 
         return id;
     }
+    
+    // insert a new object into the lights
+    void InsertIntoLightList(uint64_t id);
 
     // destroy the scene and free all memory
     void DestroyScene();

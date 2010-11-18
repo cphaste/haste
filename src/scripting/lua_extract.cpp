@@ -198,6 +198,79 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     lua_pop(L, 1);
 }
 
+void lua_extract_camera(lua_State *L, int index, Camera *dest) {
+	if (!lua_istable(L, index)) luaL_error(L, "expected table for Camera value");
+	
+	// extract eye position
+	lua_getfield(L, index, "eye");
+    if (lua_isnil(L, -1)) {
+        dest->eye = DEFAULT_CAMERA.eye;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).eye));
+    }
+    lua_pop(L, 1);
+	
+	// extract look at position
+	lua_getfield(L, index, "look");
+    if (lua_isnil(L, -1)) {
+        dest->look = DEFAULT_CAMERA.look;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).look));
+    }
+    lua_pop(L, 1);
+	
+	// extract world up vector
+	lua_getfield(L, index, "up");
+    if (lua_isnil(L, -1)) {
+        dest->up = DEFAULT_CAMERA.up;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).up));
+    }
+    lua_pop(L, 1);
+	
+	// extract gaze rotation
+	lua_getfield(L, index, "rotation");
+    if (lua_isnil(L, -1)) {
+        dest->rotation = DEFAULT_CAMERA.rotation;
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as rotation element of Camera value");
+        dest->rotation = (float)lua_tonumber(L, -1);
+    }
+    lua_pop(L, 1);
+	
+	// extract aspect ratio
+	lua_getfield(L, index, "aspect");
+    if (lua_isnil(L, -1)) {
+        dest->aspect = DEFAULT_CAMERA.aspect;
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as aspect element of Camera value");
+        dest->aspect = (float)lua_tonumber(L, -1);
+    }
+    lua_pop(L, 1);
+}
+
+void lua_extract_light(lua_State *L, int index, Light *dest) {
+	if (!lua_istable(L, index)) luaL_error(L, "expected table for Light value");
+    
+    // extract position
+    lua_getfield(L, index, "position");
+    if (lua_isnil(L, -1)) {
+        dest->position = DEFAULT_LIGHT.position;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).position));
+    }
+    lua_pop(L, 1);
+    
+    // extract radius
+    lua_getfield(L, index, "color");
+    if (lua_isnil(L, -1)) {
+        dest->color = DEFAULT_LIGHT.color;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).color));
+    }
+    lua_pop(L, 1);
+}
+
 void lua_extract_sphere(lua_State *L, int index, Sphere *dest) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Sphere value");
     

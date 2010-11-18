@@ -92,6 +92,7 @@ __device__ Intersection device::NearestObj(Ray *ray, TraceParams *params) {
     for (uint64_t i = 0; i < params->num_objs; i++) {
         Intersection obj;
         obj.type = params->meta_chunk[i].type;
+        if (obj.type == LIGHT) continue; // don't waste time on point lights
         obj.ptr = (void *) ((uint64_t) params->obj_chunk + params->meta_chunk[i].offset);
         if (Intersect(ray, &obj)) {
             if (closest.t < 0.0f) {

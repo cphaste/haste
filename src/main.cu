@@ -59,8 +59,10 @@ int main(int argc, char *argv[]) {
         params.rays = device::ray_packet;
         params.num_rays = num_rays;
         params.meta_chunk = device::meta_chunk;
+        params.light_list = device::light_list;
         params.obj_chunk = device::obj_chunk;
         params.num_objs = host::num_objs;
+        params.num_lights = host::num_lights;
         params.layer_buffers = device::layer_buffers;
         params.size = host::render.size;
 
@@ -82,7 +84,6 @@ int main(int argc, char *argv[]) {
         device::RemoveTraceParamsFromDevice();
         device::RemoveRayPacketFromDevice();
         free(packet);
-        
     } while (host::ray_queue.size() > 0);
     printf("done.\n");
 

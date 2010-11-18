@@ -5,7 +5,9 @@ Render host::render = DEFAULT_RENDER;
 Camera host::camera = DEFAULT_CAMERA;
 lua_State *host::lstate = NULL;
 uint64_t host::num_objs = 0;
+uint64_t host::num_lights = 0;
 MetaObject *host::meta_chunk = NULL;
+uint64_t *host::light_list = NULL;
 void *host::obj_chunk = NULL;
 uint64_t host::obj_chunk_size = 0;
 std::queue<Ray *> host::ray_queue;
@@ -41,6 +43,14 @@ inline static int ConvertSMVer2Cores(int major, int minor)
     fprintf(stderr, "MapSMtoCores undefined SMversion %d.%d!\n", major, minor);
     exit(EXIT_FAILURE);
     return -1;
+}
+
+void host::InsertIntoLightList(uint64_t id) {
+	// expand the light list
+	light_list = (uint64_t *)realloc(light_list, (num_lights + 1) * sizeof(uint64_t));
+	
+	// save the object id
+	light_list[num_lights++] = id;
 }
 
 void host::DestroyScene() {
