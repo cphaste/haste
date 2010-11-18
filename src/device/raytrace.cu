@@ -113,15 +113,33 @@ __device__ Intersection device::NearestObj(Ray *ray, TraceParams *params) {
 __device__ float3 device::GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer) {
     uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
     uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
-    float3 *clr = (float3 *) ((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
     return *clr;
 }
 
 __device__ void device::SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
     uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
     uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
-    float3 *clr = (float3 *) ((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
     *clr = color; 
+}
+
+__device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
+    uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
+    float *addr;
+    
+    // red component    
+    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (0 * sizeof(float)));
+    atomicAdd(addr, color.x);
+    
+    // green component    
+    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (1 * sizeof(float)));
+    atomicAdd(addr, color.y);
+    
+    // blue component    
+    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (2 * sizeof(float)));
+    atomicAdd(addr, color.z);
 }
 
 // ===== kernel functions =====
@@ -136,15 +154,15 @@ __global__ void device::RayTrace(TraceParams *params) {
     Intersection obj = NearestObj(ray, params);
 
     // DEBUG DEBUG DEBUG
-    if (obj.ptr == NULL) {
-        // nothing was hit, set background color
-        SetLayerBuffer(params, ray->pixel, ray->layer, make_float3(0.0f, 0.0f, 0.0f));
-        
-    } else {
+    if (obj.ptr != NULL) {
         // set the object color
         switch (obj.type) {
             case SPHERE:
-                SetLayerBuffer(params, ray->pixel, ray->layer, ((Sphere *) obj.ptr)->surface.color);
+                float3 clr = ((Sphere *)obj.ptr)->surface.color;
+                clr.x *= ray->contrib;
+                clr.y *= ray->contrib;
+                clr.z *= ray->contrib;
+                BlendWithLayerBuffer(params, ray->pixel, ray->layer, clr);
                 break;
         }
     }

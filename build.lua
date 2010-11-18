@@ -48,6 +48,8 @@ cxxflags = {}
 cxxflags.debug = {
     "c",                -- CUDA compile
     "m64",              -- 64-bit arch
+    "arch=compute_20",       -- compute capability
+    "code=sm_20",       -- device code generation version
     "g",                -- host debug symbols
     "G",                -- device debug symbols
     "pg",               -- gprof profiling

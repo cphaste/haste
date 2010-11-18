@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 #include <queue>
 #include <cuda_runtime.h>
 #include <cutil.h>

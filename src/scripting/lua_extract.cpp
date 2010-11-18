@@ -21,6 +21,16 @@ void lua_extract_render(lua_State *L, int index, Render *dest) {
         dest->max_bounces = (uint64_t)lua_tonumber(L, -1);
         if (dest->max_bounces < 1) luaL_error(L, "max_bounces cannot be less than 1");
     }
+    
+    // extract antialiasing size
+    lua_getfield(L, index, "antialiasing");
+    if (lua_isnil(L, -1)) {
+        dest->antialiasing = DEFAULT_RENDER.antialiasing; 
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as antialiasing element of Render value");
+        dest->antialiasing = (uint32_t)lua_tonumber(L, -1);
+        if (dest->antialiasing < 1) luaL_error(L, "antialiasing cannot be less than 1");
+    }
 }
 
 void lua_extract_float2(lua_State *L, int index, float2 *dest) {

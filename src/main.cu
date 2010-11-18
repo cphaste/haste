@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     // stream the rays down to the device
     printf("Beginning trace... ");
     fflush(stdout);
+    uint64_t total_ray_count = 0;
     do {
         // extract next packet of rays
         uint32_t num_rays = (host::ray_queue.size() >= host::packet_size) ? host::packet_size : host::ray_queue.size();
@@ -69,8 +70,6 @@ int main(int argc, char *argv[]) {
         // copy the trace parameters to the device
         device::CopyTraceParamsToDevice(&params);
 
-        printf("<threads, blocks, rays> = <%d, %d, %d>\n", host::num_threads, host::num_blocks, num_rays);
-
         // launch the kernel
         device::RayTrace<<<host::num_blocks, host::num_threads>>>(device::trace_params);
 
@@ -84,8 +83,12 @@ int main(int argc, char *argv[]) {
         device::RemoveTraceParamsFromDevice();
         device::RemoveRayPacketFromDevice();
         free(packet);
+        
+        total_ray_count += num_rays;
     } while (host::ray_queue.size() > 0);
     printf("done.\n");
+
+    printf("Traced %lu rays.\n", total_ray_count);
 
     // collapse layer buffers
     // TODO

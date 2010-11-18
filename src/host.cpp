@@ -89,10 +89,10 @@ void host::QueryDevices() {
         float mem_size = device_prop.totalGlobalMem / 1024.0f / 1024.0f;
 
         // max out the number of threads per stream processor
-        num_threads = device_prop.maxThreadsPerBlock;
+        //num_threads = device_prop.maxThreadsPerBlock;
         // FOR SOME STRANGE REASON WE CAN'T GO OVER 320 THREADS PER BLOCK
         // IT RUNS, BUT GENERATES BLANK OUTPUT. WTF.
-        //num_threads = 512;
+        num_threads = 320;
 
         // launch twice as many blocks as stream processors
         num_blocks = device_prop.multiProcessorCount * 2;
@@ -113,6 +113,9 @@ void host::QueryDevices() {
 }
 
 void host::GeneratePrimaryRays() {
+    // seed the random number generator
+    srand(time(NULL));
+
     // compute bottom left of screen space extents
     float l = camera.aspect / -2.0f;
     float b = -0.5f;
@@ -140,31 +143,57 @@ void host::GeneratePrimaryRays() {
     // compute camera's u vector
     float3 u = normalize(cross(w, v));
 
-    // loop over all pixels in the image
+    // loop over all pixels in the image (and each antialiasing cell per pixel)
     for (uint16_t x = 0; x < render.size.x; x++) {
         for (uint16_t y = 0; y < render.size.y; y++) {
-            // calculate screen space uvw
-            float us = l + (camera.aspect * (x + 0.5f) / render.size.x);
-            float vs = b + (1.0f * (y + 0.5f) / render.size.y);
-            float ws = 1.0f;
+            //printf("Pixel <%d, %d>:\n", x, y);
+            for (uint32_t i = 0; i < render.antialiasing; i++) {
+                for (uint32_t j = 0; j < render.antialiasing; j++) {
+                    float us = 0.0f;
+                    float vs = 0.0f;
+                    float ws = 0.0f;
+                    float contrib = 0.0f;
+                    
+                    // calculate screen space uvw
+                    if (render.antialiasing <= 1) { // no antialiasing
+                        us = l + (camera.aspect * (x + 0.5f) / render.size.x);
+                        vs = b + (1.0f * (y + 0.5f) / render.size.y);
+                        ws = 1.0f;      
+                        contrib = 1.0f;              
+                    } else {
+                        //printf("\tRay <%d, %d>:\n", i, j);
+                        float cell_size = 1.0f / render.antialiasing;
+                        float rand_offset = (float)rand() / RAND_MAX;
+                        us = l + (camera.aspect * (x + (i * cell_size) + (rand_offset * cell_size)) / render.size.x);
+                        //printf("\t\tcell size = %f, rand_offset = %f\n", cell_size, rand_offset);
+                        //printf("\t\ti * cell_size = %f, rand_offset * cell_size = %f\n", i * cell_size, rand_offset * cell_size);
+                        rand_offset = (float)rand() / RAND_MAX;
+                        vs = b + (1.0f * (y + (j * cell_size) + (rand_offset * cell_size)) / render.size.y);
+                        //printf("\t\tj * cell_size = %f, rand_offset * cell_size = %f\n", j * cell_size, rand_offset * cell_size);
+                        ws = 1.0f;
+                        contrib = 1.0f / (render.antialiasing * render.antialiasing);
+                        //printf("\t\tcontrib = %f\n", contrib);
+                    }
 
-            // convert screen space point to world coords
-            float3 screen_pt = camera.eye +
-                               (u * make_float3(us, us, us)) +
-                               (v * make_float3(vs, vs, vs)) +
-                               (w * make_float3(ws, ws, ws));
+                    // convert screen space point to world coords
+                    float3 screen_pt = camera.eye +
+                                       (u * make_float3(us, us, us)) +
+                                       (v * make_float3(vs, vs, vs)) +
+                                       (w * make_float3(ws, ws, ws));
 
-            // create ray
-            Ray *ray = (Ray *)malloc(sizeof(Ray));
-            ray->origin = camera.eye;
-            ray->direction = normalize(screen_pt - camera.eye);
-            ray->contrib = 1.0f;
-            ray->layer = 0;
-            ray->pixel = make_ushort2(x, y);
-            ray->unibounce = false;
+                    // create ray
+                    Ray *ray = (Ray *)malloc(sizeof(Ray));
+                    ray->origin = camera.eye;
+                    ray->direction = normalize(screen_pt - camera.eye);
+                    ray->contrib = contrib;
+                    ray->layer = 0;
+                    ray->pixel = make_ushort2(x, y);
+                    ray->unibounce = false;
 
-            // push it into the ray queue
-            ray_queue.push(ray);
+                    // push it into the ray queue
+                    ray_queue.push(ray);
+                }
+            }
         }
     }
 }

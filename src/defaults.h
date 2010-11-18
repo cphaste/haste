@@ -10,7 +10,8 @@
 extern "C" {
     const Render DEFAULT_RENDER = {
         {640, 480},             // size
-        1                       // max_bounces
+        1,                      // max_bounces
+        1,                      // antialiasing
     };
 
     const Camera DEFAULT_CAMERA = {

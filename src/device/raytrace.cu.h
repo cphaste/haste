@@ -30,6 +30,7 @@ namespace device {
     // accessor functions
     __device__ float3 GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer);
     __device__ void SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
+    __device__ void BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
 
     // kernels
     __global__ void RayTrace(TraceParams *params);

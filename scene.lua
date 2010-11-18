@@ -1,6 +1,7 @@
 render {
     size = {1024, 768},
-    max_bounces = 3
+    max_bounces = 3,
+    antialiasing = 1
 }
 
 camera {
