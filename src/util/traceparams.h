@@ -17,6 +17,8 @@ typedef struct TraceParams {
     uint64_t num_lights; // number of light-emitting objects in the scene
     float3 *layer_buffers; // pointer to the start of the device layer buffers
     ushort2 size; // size of the final image in pixels
+    uint16_t start; // start pixel (on the x axis) for multi-device rendering
+    uint16_t width; // width of the slice (on the x axis) for multi-device rendering
 } TraceParams;
 
 #endif // UTIL_TRACEPARAMS_H_

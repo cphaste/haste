@@ -111,22 +111,36 @@ __device__ Intersection device::NearestObj(Ray *ray, TraceParams *params) {
 // ===== accessor functions =====
 
 __device__ float3 device::GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer) {
-    uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
+    // shift pixel coord into this slice's buffer space
+    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+    
+    // calculate memory offsets
+    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    
     return *clr;
 }
 
 __device__ void device::SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
-    uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
+    // shift pixel coord into this slice's buffer space
+    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+
+    // calculate memory offsets
+    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    
     *clr = color; 
 }
 
 __device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
-    uint64_t layer_offset = sizeof(float3) * params->size.x * params->size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pixel.x + pixel.y * params->size.x);
+    // shift pixel coord into this slice's buffer space
+    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+    
+    // calculate memory offsets
+    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float *addr;
     
     // red component    

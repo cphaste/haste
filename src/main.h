@@ -4,15 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <vector>
 #include <cuda_runtime.h>
 
+#include "control_thread.cu.h"
 #include "host.h"
-#include "device.h"
 #include "scripting.h"
 #include "util/image.h"
-
-#include "util/ray.h"
-#include "util/traceparams.h"
-#include "device/raytrace.cu.h"
 
 #endif // MAIN_CU_H_

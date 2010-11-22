@@ -5,9 +5,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <vector>
 #include <queue>
 #include <cuda_runtime.h>
 #include <cutil.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include "defaults.h"
 #include "scripting.h"
@@ -27,10 +30,6 @@ namespace host {
     extern uint64_t *light_list; // base pointer to the host's list of light-emitting objects
     extern void *obj_chunk; // base pointer to the host's object chunk
     extern uint64_t obj_chunk_size; // current size (in bytes) of the host's object chunk)
-    extern std::queue<Ray *> ray_queue; // queue of rays to be traced
-    extern int num_blocks; // the number of blocks to launch each kernel with
-    extern int num_threads; // the number of threads to launch each kernel with
-    extern uint32_t packet_size; // optimal number of rays in each ray packet
 
     // insert a new object into the scene
     template <typename T>
@@ -63,11 +62,13 @@ namespace host {
     // destroy the scene and free all memory
     void DestroyScene();
 
-    // query devices and set up processing options
-    void QueryDevices();
-
-    // fills the ray queue with primary rays cast from the camera
-    void GeneratePrimaryRays();
+    // returns a list of device id's for usable CUDA devices
+    std::vector<int> QueryDevices();
+    
+    // returns the output file base name (no extension) by parsing the extension
+    // off the input file name and returning a freshly allocated string (free
+    // it when you're done)
+    char *GetOutputBaseName(const char *input_filename);
 }
 
 #endif // HOST_H_

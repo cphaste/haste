@@ -11,9 +11,9 @@
 -- By the way, double dashes are comments in Lua
 
 srcs = {
-    "device.cpp",
+    "control_thread.cu",
     "host.cpp",
-    "main.cu",
+    "main.cpp",
     "scripting.cpp",
     "device/raytrace.cu",
     "scripting/lua_extract.cpp",

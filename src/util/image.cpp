@@ -1,9 +1,17 @@
 #include "image.h"
 
 void image::Targa(float3 *buffer, ushort2 size, const char *file) {
+    // add .tga extension to the file base name
+    size_t file_len = strlen(file);
+    char *filename = (char *)malloc(sizeof(char) * (file_len + 5));
+    strncpy(filename, file, file_len);
+    strncpy(filename + file_len, ".tga", 4);
+    filename[file_len + 4] = '\0';
+    
     // open the file for writing
-    FILE *fp = fopen(file, "wb");
+    FILE *fp = fopen(filename, "wb");
     if (fp == NULL) {
+        free(filename);
         perror("Failed to open targa file for writing!");
         exit(EXIT_FAILURE);
     }
@@ -62,4 +70,6 @@ void image::Targa(float3 *buffer, ushort2 size, const char *file) {
     }
 
     fclose(fp);
+    
+    free(filename);
 }
