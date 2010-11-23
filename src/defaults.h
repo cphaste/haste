@@ -6,6 +6,7 @@
 #include "util/surface.h"
 #include "scene/light.h"
 #include "scene/sphere.h"
+#include "scene/plane.h"
 
 extern "C" {
     const Render DEFAULT_RENDER = {
@@ -38,13 +39,19 @@ extern "C" {
 
 	const Light DEFAULT_LIGHT = {
 		{10.0f, 10.0f, 10.0f},	// position
-		{1.0f, 1.0f, 1.0f},		// color
+		{1.0f, 1.0f, 1.0f}		// color
 	};
 
     const Sphere DEFAULT_SPHERE = {
         {0.0f, 0.0f, 0.0f},     // position
         1.0f,                   // radius
-        DEFAULT_SURFACE,        // surface
+        DEFAULT_SURFACE         // surface
+    };
+    
+    const Plane DEFAULT_PLANE = {
+        {0.0f, 1.0f, 0.0f},     // normal
+        0.0f,                   // distance
+        DEFAULT_SURFACE         // surface
     };
 }
 

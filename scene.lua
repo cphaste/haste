@@ -5,7 +5,8 @@ render {
 }
 
 camera {
-	eye = {0, 3, 10}
+	eye = {0, 4, 10},
+	look = {0, 1, 0}
 }
 
 lt = light {
@@ -13,7 +14,7 @@ lt = light {
 }
 
 ball = sphere {
-    position = {-3, 0, 0},
+    position = {-3, 1, 0},
     radius = 1,
     color = {1.0, 0.0, 0.0},
     specular = 0.4,
@@ -21,7 +22,7 @@ ball = sphere {
 }
 
 ball2 = sphere {
-    position = {0, 0, 3},
+    position = {0, 1, 3},
     radius = 1,
     color = {0.0, 1.0, 0.0},
     specular = 0.4,
@@ -29,9 +30,13 @@ ball2 = sphere {
 }
 
 ball3 = sphere {
-    position = {3, 0, 0},
+    position = {3, 1, 0},
     radius = 1,
     color = {0.0, 0.0, 1.0},
     specular = 0.4,
     shininess = 0.01
+}
+
+floor = plane {
+    color = {0.85, 0.85, 0.85}
 }

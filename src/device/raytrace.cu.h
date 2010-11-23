@@ -8,8 +8,9 @@
 #include "util/surface.h"
 #include "util/render.h"
 #include "scene/objtypes.h"
-#include "scene/sphere.h"
 #include "scene/light.h"
+#include "scene/sphere.h"
+#include "scene/plane.h"
 
 typedef struct Intersection {
     ObjType type;
@@ -30,10 +31,12 @@ namespace device {
 
     // normal functions
     __device__ float3 Normal(Sphere *sphere, const float3 &point);
+    __device__ float3 Normal(Plane *plane, const float3 &point);
     __device__ float3 Normal(Intersection *obj, const float3 &point);
 
     // intersection functions
     __device__ float Intersect(Ray *ray, Sphere *sphere);
+    __device__ float Intersect(Ray *ray, Plane *plane);
     __device__ bool Intersect(Ray *ray, Intersection *obj);
     __device__ Intersection NearestObj(Ray *ray, TraceParams *params);
 

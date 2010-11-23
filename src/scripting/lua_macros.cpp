@@ -60,4 +60,25 @@ int lua_macro_sphere(lua_State *L) {
     return 1;
 }
 
+int lua_macro_plane(lua_State *L) {
+    // extract the plane from the table
+    Plane plane;
+    lua_extract_plane(L, 1, &plane);
 
+    // insert it into the host's scene
+    uint64_t id = host::InsertIntoScene(PLANE, &plane);
+    
+    // if the sphere is emissive, insert it into the light list
+    if (plane.surface.emissive > 0.0f) {
+    	host::InsertIntoLightList(id);
+    }
+
+    // push the table back onto the stack
+    lua_pushvalue(L, 1);
+
+    // set the id key
+    lua_pushnumber(L, (lua_Number)id);
+    lua_setfield(L, -2, "id");
+
+    return 1;
+}

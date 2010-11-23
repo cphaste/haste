@@ -11,6 +11,7 @@
 #include "util/camera.h"
 #include "scene/light.h"
 #include "scene/sphere.h"
+#include "scene/plane.h"
 
 // render config extraction
 void lua_extract_render(lua_State *L, int index, Render *dest);
@@ -30,5 +31,6 @@ void lua_extract_camera(lua_State *L, int index, Camera *dest);
 // geometry extraction
 void lua_extract_light(lua_State *L, int index, Light *dest);
 void lua_extract_sphere(lua_State *L, int index, Sphere *dest);
+void lua_extract_plane(lua_State *L, int index, Plane *dest);
 
 #endif // SCRIPTING_LUA_EXTRACT_H_

@@ -326,3 +326,29 @@ void lua_extract_sphere(lua_State *L, int index, Sphere *dest) {
     // extract surface
     lua_extract_surface(L, index, &((*dest).surface));
 }
+
+void lua_extract_plane(lua_State *L, int index, Plane *dest) {
+    if (!lua_istable(L, index)) luaL_error(L, "expected table for Plane value");
+    
+    // extract normal
+    lua_getfield(L, index, "normal");
+    if (lua_isnil(L, -1)) {
+        dest->normal = DEFAULT_PLANE.normal;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).normal));
+    }
+    lua_pop(L, 1);
+    
+    // extract distance
+    lua_getfield(L, index, "distance");
+    if (lua_isnil(L, -1)) {
+        dest->distance = DEFAULT_PLANE.distance;
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as distance element of Plane value");
+        dest->distance = (float)lua_tonumber(L, -1);
+    }
+    lua_pop(L, 1);
+    
+    // extract surface
+    lua_extract_surface(L, index, &((*dest).surface));
+}
