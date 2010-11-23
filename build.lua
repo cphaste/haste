@@ -24,7 +24,7 @@ cxx = "nvcc"
 -- binary names
 bin = {}
 bin.debug = "bin/Debug/haste"
-bin.release = "bin/Debug/haste"
+bin.release = "bin/Release/haste"
 
 -- paths to search for including header files
 includes = {
@@ -48,7 +48,7 @@ cxxflags = {}
 cxxflags.debug = {
     "c",                -- CUDA compile
     "m64",              -- 64-bit arch
-    "arch=compute_20",       -- compute capability
+    "arch=compute_20",  -- compute capability
     "code=sm_20",       -- device code generation version
     "g",                -- host debug symbols
     "G",                -- device debug symbols
@@ -57,7 +57,9 @@ cxxflags.debug = {
 cxxflags.release = {
     "c",                -- CUDA compile
     "m64",              -- 64-bit arch
-    "O2",               -- optimizer level 2
+    "arch=compute_20",  -- compute capability
+    "code=sm_20",       -- device code generation version
+    "O3",               -- optimizer level 3
     "use_fast_math"     -- fast math library
 }
 
