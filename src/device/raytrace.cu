@@ -22,7 +22,7 @@ __device__ float3 device::operator-(const float3 &lhs, const float3 &rhs) {
     return r;
 }
 
-__device__ float3 device::operator*(const float4 &lhs, const float3 &rhs) {
+__device__ float3 device::operator*(const float3 &lhs, const float3 &rhs) {
     float3 r;
     r.x = lhs.x * rhs.x;
     r.y = lhs.y * rhs.y;
@@ -30,7 +30,7 @@ __device__ float3 device::operator*(const float4 &lhs, const float3 &rhs) {
     return r;
 }
 
-__device__ float3 device::operator/(const float4 &lhs, const float3 &rhs) {
+__device__ float3 device::operator/(const float3 &lhs, const float3 &rhs) {
     float3 r;
     r.x = lhs.x / rhs.x;
     r.y = lhs.y / rhs.y;
@@ -40,6 +40,37 @@ __device__ float3 device::operator/(const float4 &lhs, const float3 &rhs) {
 
 __device__ float device::dot(const float3 &lhs, const float3 &rhs) {
     return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
+}
+
+__device__ float device::length(const float3 &v) {
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+__device__ float3 device::normalize(const float3 &v) {
+    float len = length(v);
+    return v / make_float3(len, len, len);
+}
+
+__device__ float3 device::evaluate(Ray *ray, float t) {
+    return ray->origin + (ray->direction * make_float3(t, t, t));
+}
+
+// ===== normal functions =====
+
+__device__ float3 device::Normal(Sphere *sphere, const float3 &point) {
+    float3 normal = point - sphere->position;
+    return normalize(normal);
+}
+
+__device__ float3 device::Normal(Intersection *obj, const float3 &point) {
+    // TODO: handle transforms here
+    
+    switch (obj->type) {
+        case SPHERE:
+            return Normal((Sphere *)(obj->ptr), point);
+    }
+    
+    return make_float3(0.0f, 0.0f, 0.0f);
 }
 
 // ===== intersection functions =====
@@ -77,7 +108,7 @@ __device__ bool device::Intersect(Ray *ray, Intersection *obj) {
 
     switch (obj->type) {
         case SPHERE:
-            obj->t = Intersect(ray, (Sphere *)obj->ptr);
+            obj->t = Intersect(ray, (Sphere *)(obj->ptr));
             if (obj->t > EPSILON) return true;
             break;
     }
@@ -115,7 +146,7 @@ __device__ float3 device::GetLayerBuffer(TraceParams *params, ushort2 pixel, uin
     ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
     
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
     uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
     
@@ -127,7 +158,7 @@ __device__ void device::SetLayerBuffer(TraceParams *params, ushort2 pixel, uint6
     ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
 
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
     uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
     
@@ -139,7 +170,7 @@ __device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel,
     ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
     
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->size.y * layer;
+    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
     uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
     float *addr;
     
@@ -156,6 +187,74 @@ __device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel,
     atomicAdd(addr, color.z);
 }
 
+__device__ Surface* device::GetSurface(Intersection *obj) {
+    switch (obj->type) {
+        case SPHERE:
+            return &(((Sphere *)(obj->ptr))->surface);
+    }
+    
+    return NULL;
+}
+
+__device__ float3 device::GetLightColor(TraceParams *params, MetaObject *obj) {
+    return ((Light *)((uint64_t)(params->obj_chunk) + obj->offset))->color;
+}
+
+__device__ float3 device::GetRandomLightPosition(TraceParams *params, MetaObject *obj) {
+    switch (obj->type) {
+        case LIGHT:
+            Light *light = (Light *)((uint64_t)(params->obj_chunk) + obj->offset);
+            return light->position;
+            
+        //case SPHERE:
+            //return GetRandomLightPosition((Sphere *)((uint64_t)(params->obj_chunk) + obj->offset));
+    }
+    
+    return make_float3(0.0f, 0.0f, 0.0f);
+}
+
+// ===== shading functions =====
+
+__device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersection *obj) {
+    float3 hit_pt = evaluate(ray, obj->t);
+    Surface *surface = GetSurface(obj);
+    float3 N = Normal(obj, hit_pt);
+    float contrib = ray->contrib * 1.0f / params->num_lights * 1.0f / params->render.direct_samples;
+    float3 clr = {0.0f, 0.0f, 0.0f};
+    
+
+    // sample each light direct_samples times
+    for (uint64_t i = 0; i < params->num_lights; i++) {
+        uint64_t light_id = params->light_list[i];
+        MetaObject light = params->meta_chunk[light_id];
+        float3 light_clr = GetLightColor(params, &light);    
+        
+        // record each sample
+        for (uint32_t j = 0; j < params->render.direct_samples; j++) {
+            float3 light_pos = GetRandomLightPosition(params, &light);
+            float3 L = normalize(light_pos - hit_pt);
+            
+            // diffuse component
+            float NdotL = dot(N, L);
+            NdotL = (NdotL > 0.0f) ? NdotL : 0.0f; // clamp to positive contributions only
+            clr.x += contrib * surface->diffuse * surface->color.x * light_clr.x * NdotL;
+            clr.y += contrib * surface->diffuse * surface->color.y * light_clr.y * NdotL;
+            clr.z += contrib * surface->diffuse * surface->color.z * light_clr.z * NdotL;
+            
+            // specular component (half angle approximation)
+            float3 H = normalize(L + (ray->direction * make_float3(-1.0f, -1.0f, -1.0f)));
+            float NdotH = dot(N, H);
+            NdotH = (NdotH > 0.0f) ? NdotH : 0.0f; // clamp to positive contributions only
+            clr.x += contrib * surface->specular * light_clr.x * pow(NdotH, 1.0f / surface->shininess);
+            clr.y += contrib * surface->specular * light_clr.y * pow(NdotH, 1.0f / surface->shininess);
+            clr.z += contrib * surface->specular * light_clr.z * pow(NdotH, 1.0f / surface->shininess);
+        }
+    }
+    
+    // blend with the layer buffer
+    BlendWithLayerBuffer(params, ray->pixel, ray->layer, clr);
+}
+
 // ===== kernel functions =====
 
 __global__ void device::RayTrace(TraceParams *params) {
@@ -167,24 +266,13 @@ __global__ void device::RayTrace(TraceParams *params) {
     // find the nearest object
     Intersection obj = NearestObj(ray, params);
 
-    // DEBUG DEBUG DEBUG
+    // if the ray hit something...
     if (obj.ptr != NULL) {
-        // set the object color
-        switch (obj.type) {
-            case SPHERE:
-                float3 clr = ((Sphere *)obj.ptr)->surface.color;
-                clr.x *= ray->contrib;
-                clr.y *= ray->contrib;
-                clr.z *= ray->contrib;
-                BlendWithLayerBuffer(params, ray->pixel, ray->layer, clr);
-                break;
-        }
+        // compute direct lighting
+        DirectShading(params, ray, &obj);
+
+        // TODO: generate importance rays
+
+        // TODO: generate ambient rays
     }
-    // DEBUG DEBUG DEBUG
-
-    // TODO: compute direct lighting (sample lights)
-
-    // TODO: generate importance rays
-
-    // TODO: generate ambient rays
 }

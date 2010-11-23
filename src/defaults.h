@@ -12,6 +12,8 @@ extern "C" {
         {640, 480},             // size
         1,                      // max_bounces
         1,                      // antialiasing
+        10,                     // direct_samples
+        10                      // indirect_samples
     };
 
     const Camera DEFAULT_CAMERA = {

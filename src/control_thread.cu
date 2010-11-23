@@ -253,13 +253,13 @@ void ControlThread::PrepareForPacketTrace(Ray *packet, uint32_t num_rays) {
     TraceParams params;
     params.rays = _ray_packet;
     params.num_rays = num_rays;
+    params.render = host::render;
     params.meta_chunk = _meta_chunk;
     params.light_list = _light_list;
     params.obj_chunk = _obj_chunk;
     params.num_objs = host::num_objs;
     params.num_lights = host::num_lights;
     params.layer_buffers = _layer_buffers;
-    params.size = host::render.size;
     params.start = _start;
     params.width = _width;
     

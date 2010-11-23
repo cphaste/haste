@@ -18,7 +18,7 @@ void lua_extract_render(lua_State *L, int index, Render *dest) {
         dest->max_bounces = DEFAULT_RENDER.max_bounces; 
     } else {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as max_bounces element of Render value");
-        dest->max_bounces = (uint64_t)lua_tonumber(L, -1);
+        dest->max_bounces = (uint32_t)lua_tonumber(L, -1);
         if (dest->max_bounces < 1) luaL_error(L, "max_bounces cannot be less than 1");
     }
     
@@ -30,6 +30,26 @@ void lua_extract_render(lua_State *L, int index, Render *dest) {
         if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as antialiasing element of Render value");
         dest->antialiasing = (uint32_t)lua_tonumber(L, -1);
         if (dest->antialiasing < 1) luaL_error(L, "antialiasing cannot be less than 1");
+    }
+    
+    // extract direct_samples
+    lua_getfield(L, index, "direct_samples");
+    if (lua_isnil(L, -1)) {
+        dest->direct_samples = DEFAULT_RENDER.direct_samples; 
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as direct_samples element of Render value");
+        dest->direct_samples = (uint32_t)lua_tonumber(L, -1);
+        if (dest->direct_samples < 1) luaL_error(L, "direct_samples cannot be less than 1");
+    }
+    
+    // extract indirect_samples
+    lua_getfield(L, index, "indirect_samples");
+    if (lua_isnil(L, -1)) {
+        dest->indirect_samples = DEFAULT_RENDER.indirect_samples; 
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as indirect_samples element of Render value");
+        dest->indirect_samples = (uint32_t)lua_tonumber(L, -1);
+        if (dest->indirect_samples < 1) luaL_error(L, "indirect_samples cannot be less than 1");
     }
 }
 
