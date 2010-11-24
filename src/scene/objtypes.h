@@ -4,7 +4,8 @@
 typedef enum ObjType {
 	LIGHT,
     SPHERE,
-    PLANE
+    PLANE,
+    TRIANGLE
 } ObjType;
 
 #endif // SCENE_OBJTYPES_H_

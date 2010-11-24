@@ -13,30 +13,30 @@ lt = light {
     -- using defaults for now
 }
 
+floor = plane {
+    color = {1.0, 1.0, 1.0},
+    distance = -1
+}
+
 ball = sphere {
-    position = {-3, 1, 0},
+    position = {-3, 0, 0},
     radius = 1,
     color = {1.0, 0.0, 0.0},
     specular = 0.4,
     shininess = 0.01
 }
 
-ball2 = sphere {
-    position = {0, 1, 3},
-    radius = 1,
+tri = triangle {
     color = {0.0, 1.0, 0.0},
-    specular = 0.4,
-    shininess = 0.01
+    normal1 = {1, -1, 1},
+    normal2 = {0, 1, 1},
+    normal3 = {-1, -1, 1}
 }
 
 ball3 = sphere {
-    position = {3, 1, 0},
+    position = {3, 0, 0},
     radius = 1,
     color = {0.0, 0.0, 1.0},
     specular = 0.4,
     shininess = 0.01
-}
-
-floor = plane {
-    color = {0.85, 0.85, 0.85}
 }

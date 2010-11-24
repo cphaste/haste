@@ -352,3 +352,67 @@ void lua_extract_plane(lua_State *L, int index, Plane *dest) {
     // extract surface
     lua_extract_surface(L, index, &((*dest).surface));
 }
+
+void lua_extract_triangle(lua_State *L, int index, Triangle *dest) {
+    if (!lua_istable(L, index)) luaL_error(L, "expected table for Triangle value");
+    
+    // extract vertex1
+    lua_getfield(L, index, "vertex1");
+    if (lua_isnil(L, -1)) {
+        dest->vertex1 = DEFAULT_TRIANGLE.vertex1;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).vertex1));
+    }
+    lua_pop(L, 1);
+    
+    // extract vertex2
+    lua_getfield(L, index, "vertex2");
+    if (lua_isnil(L, -1)) {
+        dest->vertex2 = DEFAULT_TRIANGLE.vertex2;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).vertex2));
+    }
+    lua_pop(L, 1);
+    
+    // extract vertex3
+    lua_getfield(L, index, "vertex3");
+    if (lua_isnil(L, -1)) {
+        dest->vertex3 = DEFAULT_TRIANGLE.vertex3;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).vertex3));
+    }
+    lua_pop(L, 1);
+    
+    // extract normal1
+    lua_getfield(L, index, "normal1");
+    if (lua_isnil(L, -1)) {
+        dest->normal1 = DEFAULT_TRIANGLE.normal1;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).normal1));
+    }
+    lua_pop(L, 1);
+    dest->normal1 = normalize(dest->normal1);
+    
+    // extract normal2
+    lua_getfield(L, index, "normal2");
+    if (lua_isnil(L, -1)) {
+        dest->normal2 = DEFAULT_TRIANGLE.normal2;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).normal2));
+    }
+    lua_pop(L, 1);
+    dest->normal2 = normalize(dest->normal2);
+    
+    // extract normal3
+    lua_getfield(L, index, "normal3");
+    if (lua_isnil(L, -1)) {
+        dest->normal3 = DEFAULT_TRIANGLE.normal3;
+    } else {
+        lua_extract_float3(L, -1, &((*dest).normal3));
+    }
+    lua_pop(L, 1);
+    dest->normal3 = normalize(dest->normal3);
+    
+    // extract surface
+    lua_extract_surface(L, index, &((*dest).surface));
+}

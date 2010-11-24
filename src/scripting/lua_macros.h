@@ -9,6 +9,7 @@
 #include "scene/objtypes.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"
+#include "scene/triangle.h"
 
 // render configuration extraction
 int lua_macro_render(lua_State *L);
@@ -20,5 +21,6 @@ int lua_macro_camera(lua_State *L);
 int lua_macro_light(lua_State *L);
 int lua_macro_sphere(lua_State *L);
 int lua_macro_plane(lua_State *L);
+int lua_macro_triangle(lua_State *L);
 
 #endif // SCRIPTING_LUA_MACROS_H_

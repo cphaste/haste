@@ -68,8 +68,31 @@ int lua_macro_plane(lua_State *L) {
     // insert it into the host's scene
     uint64_t id = host::InsertIntoScene(PLANE, &plane);
     
-    // if the sphere is emissive, insert it into the light list
+    // if the plane is emissive, insert it into the light list
     if (plane.surface.emissive > 0.0f) {
+    	host::InsertIntoLightList(id);
+    }
+
+    // push the table back onto the stack
+    lua_pushvalue(L, 1);
+
+    // set the id key
+    lua_pushnumber(L, (lua_Number)id);
+    lua_setfield(L, -2, "id");
+
+    return 1;
+}
+
+int lua_macro_triangle(lua_State *L) {
+    // extract the triangle from the table
+    Triangle triangle;
+    lua_extract_triangle(L, 1, &triangle);
+
+    // insert it into the host's scene
+    uint64_t id = host::InsertIntoScene(TRIANGLE, &triangle);
+    
+    // if the triangle is emissive, insert it into the light list
+    if (triangle.surface.emissive > 0.0f) {
     	host::InsertIntoLightList(id);
     }
 

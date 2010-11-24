@@ -7,52 +7,63 @@ namespace device {
 // ===== math functions =====
 
 __device__ float3 device::operator+(const float3 &lhs, const float3 &rhs) {
-    float3 r;
-    r.x = lhs.x + rhs.x;
-    r.y = lhs.y + rhs.y;
-    r.z = lhs.z + rhs.z;
-    return r;
+    return make_float3(lhs.x + rhs.x,
+                        lhs.y + rhs.y,
+                        lhs.z + rhs.z);
 }
 
 __device__ float3 device::operator-(const float3 &lhs, const float3 &rhs) {
-    float3 r;
-    r.x = lhs.x - rhs.x;
-    r.y = lhs.y - rhs.y;
-    r.z = lhs.z - rhs.z;
-    return r;
+    return make_float3(lhs.x - rhs.x,
+                        lhs.y - rhs.y,
+                        lhs.z - rhs.z);
 }
 
 __device__ float3 device::operator*(const float3 &lhs, const float3 &rhs) {
-    float3 r;
-    r.x = lhs.x * rhs.x;
-    r.y = lhs.y * rhs.y;
-    r.z = lhs.z * rhs.z;
-    return r;
+    return make_float3(lhs.x * rhs.x,
+                        lhs.y * rhs.y,
+                        lhs.z * rhs.z);
 }
 
 __device__ float3 device::operator/(const float3 &lhs, const float3 &rhs) {
-    float3 r;
-    r.x = lhs.x / rhs.x;
-    r.y = lhs.y / rhs.y;
-    r.z = lhs.z / rhs.z;
-    return r;
+    return make_float3(lhs.x / rhs.x,
+                        lhs.y / rhs.y,
+                        lhs.z / rhs.z);
 }
 
 __device__ float device::dot(const float3 &lhs, const float3 &rhs) {
     return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
 }
 
+__device__ float3 device::cross(const float3 &lhs, const float3 &rhs) {
+    return make_float3((lhs.y * rhs.z) - (lhs.z * rhs.y),
+                        (lhs.z * rhs.x) - (lhs.x * rhs.z),
+                        (lhs.x * rhs.y) - (lhs.y * rhs.x));
+}
+
 __device__ float device::length(const float3 &v) {
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
+__device__ float device::distance(const float3 &a, const float3 &b) {
+    return length(a - b);
+}
+
 __device__ float3 device::normalize(const float3 &v) {
     float len = length(v);
-    return v / make_float3(len, len, len);
+    return make_float3(v.x / len, v.y / len, v.z / len);
 }
 
 __device__ float3 device::evaluate(Ray *ray, float t) {
     return ray->origin + (ray->direction * make_float3(t, t, t));
+}
+
+__device__ float device::triarea(const float3 &a, const float3 &b, const float3 &c) {
+    // heron's formula
+    float i = distance(a, b);
+    float j = distance(a, c);
+    float k = distance(b, c);
+    float s = (i + j + k) / 2.0f;    
+    return sqrtf(s * (s - i) * (s - j) * (s - k));
 }
 
 // ===== normal functions =====
@@ -66,6 +77,34 @@ __device__ float3 device::Normal(Plane *plane, const float3 &point) {
     return normalize(plane->normal);
 }
 
+__device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
+    // returns the smooth normal of the triangle (interpolated from vertex normals)
+    // this uses the ratios of the areas of the three sub-triangles created by
+    // the point to weight the normal contribution
+    // thanks to http://74.86.81.120/Community/posts.php?topic=57617
+    float area_a = triarea(point, triangle->vertex2, triangle->vertex3);
+    float area_b = triarea(triangle->vertex1, point, triangle->vertex3);
+    float area_c = triarea(triangle->vertex1, triangle->vertex2, point);
+    float area_total = area_a + area_b + area_c;
+    
+    // calculate weighting coefficients
+    float weight1 = area_a / area_total;
+    float weight2 = area_b / area_total;
+    float weight3 = area_c / area_total;
+    
+    // interpolate the normal
+    return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
+                                  (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
+                                  (triangle->normal1.z + weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
+}
+
+__device__ float3 device::Normal(Triangle *triangle) {
+    // returns the face normal of the triangle (NOT INTERPOLATED FROM VERTEX NORMALS!)
+    float3 AB = triangle->vertex2 - triangle->vertex1;
+    float3 AC = triangle->vertex3 - triangle->vertex1;
+    return normalize(cross(AB, AC));
+}
+
 __device__ float3 device::Normal(Intersection *obj, const float3 &point) {
     // TODO: handle transforms here
     
@@ -75,6 +114,9 @@ __device__ float3 device::Normal(Intersection *obj, const float3 &point) {
             
         case PLANE:
             return Normal((Plane *)(obj->ptr), point);
+            
+        case TRIANGLE:
+            return Normal((Triangle *)(obj->ptr), point);
     }
     
     return make_float3(0.0f, 0.0f, 0.0f);
@@ -132,6 +174,69 @@ __device__ float device::Intersect(Ray *ray, Plane *plane) {
     return -1.0f;
 }
 
+__device__ float device::Intersect(Ray *ray, Triangle *triangle) {
+    // quick plane intersection test to avoid expensive barycentric test
+    float3 N = Normal(triangle);
+    float denom = dot(ray->direction, N);
+    if (denom == 0.0f) {
+        // ray and triangle are in parallel planes, no intersection
+        return -1.0f;
+    }
+    float t = dot((triangle->vertex1 - ray->origin), N) / denom;
+    if (t < 0.0f) {
+        // we don't care, intersects behind
+        return -1.0f;
+    }
+    float3 p = evaluate(ray, t);
+    
+
+    // compute the matrix members
+    float a = triangle->vertex1.x - triangle->vertex2.x;
+    float b = triangle->vertex1.y - triangle->vertex2.y;
+    float c = triangle->vertex1.z - triangle->vertex2.z;
+    float d = triangle->vertex1.x - triangle->vertex3.x;
+    float e = triangle->vertex1.y - triangle->vertex3.y;
+    float f = triangle->vertex1.z - triangle->vertex3.z;
+    float g = ray->direction.x;
+    float h = ray->direction.y;
+    float i = ray->direction.z;
+    float j = triangle->vertex1.x - p.x;
+    float k = triangle->vertex1.y - p.y;
+    float l = triangle->vertex1.z - p.z;
+
+
+    // compute the determinant of M
+    float detM = a * (e * i - h * f) + b * (g * f - d * i) + c * (d * h - e * g);
+    if (detM == 0.0f) {
+        // no point in going any further
+        return -1.0f;
+    }
+
+
+    // next compute gamma, and check to make sure it's in range (>= 0)
+    float gamma = i * (a * k - j * b) + h * (j * c - a * l) + g * (b * l - k * c);
+    gamma /= detM;
+    if (gamma < 0.0f) {
+        return -1.0f;
+    }
+    
+    // lastly, compute beta, and check to make sure it's in range (>= 0)
+    float beta = j * (e * i - h * f) + k * (g * f - d * i) + l * (d * h - e * g);
+    beta /= detM;
+    if (beta < 0.0f) {
+        return -1.0f;
+    }
+
+
+    // finally check our beta/gamma combined range to make sure it intersects (beta + gamma <= 1)
+    if (beta + gamma > 1.0f) {
+        return -1.0f;
+    }
+    
+    // intersection is good!
+    return t;
+}
+
 __device__ bool device::Intersect(Ray *ray, Intersection *obj) {
     // TODO: transform the ray by the inverse transformation matrix
 
@@ -143,6 +248,11 @@ __device__ bool device::Intersect(Ray *ray, Intersection *obj) {
             
         case PLANE:
             obj->t = Intersect(ray, (Plane *)(obj->ptr));
+            if (obj->t > EPSILON) return true;
+            break;
+            
+        case TRIANGLE:
+            obj->t = Intersect(ray, (Triangle *)(obj->ptr));
             if (obj->t > EPSILON) return true;
             break;
     }
@@ -228,6 +338,9 @@ __device__ Surface* device::GetSurface(Intersection *obj) {
             
         case PLANE:
             return &(((Plane *)(obj->ptr))->surface);
+            
+        case TRIANGLE:
+            return &(((Triangle *)(obj->ptr))->surface);
     }
     
     return NULL;
@@ -258,7 +371,6 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
     float3 N = Normal(obj, hit_pt);
     float contrib = ray->contrib * 1.0f / params->num_lights * 1.0f / params->render.direct_samples;
     float3 clr = {0.0f, 0.0f, 0.0f};
-    
 
     // sample each light direct_samples times
     for (uint64_t i = 0; i < params->num_lights; i++) {

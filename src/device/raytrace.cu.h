@@ -11,6 +11,7 @@
 #include "scene/light.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"
+#include "scene/triangle.h"
 
 typedef struct Intersection {
     ObjType type;
@@ -25,18 +26,24 @@ namespace device {
     __device__ float3 operator*(const float3 &lhs, const float3 &rhs);
     __device__ float3 operator/(const float3 &lhs, const float3 &rhs);
     __device__ float dot(const float3 &lhs, const float3 &rhs);
+    __device__ float3 cross(const float3 &lhs, const float3 &rhs);
     __device__ float length(const float3 &v);
+    __device__ float distance(const float3 &a, const float3 &b);
     __device__ float3 normalize(const float3 &v);
     __device__ float3 evaluate(Ray *ray, float t);
+    __device__ float triarea(const float3 &a, const float3 &b, const float3 &c);
 
     // normal functions
     __device__ float3 Normal(Sphere *sphere, const float3 &point);
     __device__ float3 Normal(Plane *plane, const float3 &point);
+    __device__ float3 Normal(Triangle *triangle, const float3 &point);
+    __device__ float3 Normal(Triangle *triangle);
     __device__ float3 Normal(Intersection *obj, const float3 &point);
 
     // intersection functions
     __device__ float Intersect(Ray *ray, Sphere *sphere);
     __device__ float Intersect(Ray *ray, Plane *plane);
+    __device__ float Intersect(Ray *ray, Triangle *triangle);
     __device__ bool Intersect(Ray *ray, Intersection *obj);
     __device__ Intersection NearestObj(Ray *ray, TraceParams *params);
 

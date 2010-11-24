@@ -7,6 +7,7 @@
 #include "scene/light.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"
+#include "scene/triangle.h"
 
 extern "C" {
     const Render DEFAULT_RENDER = {
@@ -52,6 +53,15 @@ extern "C" {
         {0.0f, 1.0f, 0.0f},     // normal
         0.0f,                   // distance
         DEFAULT_SURFACE         // surface
+    };
+    
+    const Triangle DEFAULT_TRIANGLE = {
+        {1.0f, -1.0f, 0.0f},    // vertex1
+        {0.0f, 1.0f, 0.0f},     // vertex2
+        {-1.0f, -1.0f, 0.0f},   // vertex3
+        {0.0f, 0.0f, 1.0f},     // normal1
+        {0.0f, 0.0f, 1.0f},     // normal2
+        {0.0f, 0.0f, 1.0f}      // normal3
     };
 }
 

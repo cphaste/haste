@@ -9,9 +9,11 @@
 #include "util/render.h"
 #include "util/surface.h"
 #include "util/camera.h"
+#include "util/vectors.h"
 #include "scene/light.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"
+#include "scene/triangle.h"
 
 // render config extraction
 void lua_extract_render(lua_State *L, int index, Render *dest);
@@ -32,5 +34,6 @@ void lua_extract_camera(lua_State *L, int index, Camera *dest);
 void lua_extract_light(lua_State *L, int index, Light *dest);
 void lua_extract_sphere(lua_State *L, int index, Sphere *dest);
 void lua_extract_plane(lua_State *L, int index, Plane *dest);
+void lua_extract_triangle(lua_State *L, int index, Triangle *dest);
 
 #endif // SCRIPTING_LUA_EXTRACT_H_
