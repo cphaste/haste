@@ -1,12 +1,14 @@
+dofile "obj_import.lua"
+
 render {
-    size = {1024, 768},
+    size = {800, 600},
     max_bounces = 3,
-    antialiasing = 3
+    antialiasing = 1
 }
 
 camera {
-	eye = {0, 4, 10},
-	look = {0, 1, 0}
+	eye = {0, 3, 10},
+	look = {0, 0, 0}
 }
 
 lt = light {
@@ -24,13 +26,6 @@ ball = sphere {
     color = {1.0, 0.0, 0.0},
     specular = 0.4,
     shininess = 0.01
-}
-
-tri = triangle {
-    color = {0.0, 1.0, 0.0},
-    normal1 = {1, -1, 1},
-    normal2 = {0, 1, 1},
-    normal3 = {-1, -1, 1}
 }
 
 ball3 = sphere {
