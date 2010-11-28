@@ -346,18 +346,21 @@ __device__ Surface* device::GetSurface(Intersection *obj) {
     return NULL;
 }
 
-__device__ float3 device::GetLightColor(TraceParams *params, MetaObject *obj) {
-    return ((Light *)((uint64_t)(params->obj_chunk) + obj->offset))->color;
+__device__ float3 device::GetLightColor(TraceParams *params, LightObject *light) {
+    switch (light->type) {
+        case LIGHT:
+            Light *ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            return ptlt->color;
+    }
+
+    return make_float3(0.0f, 0.0f, 0.0f);
 }
 
-__device__ float3 device::GetRandomLightPosition(TraceParams *params, MetaObject *obj) {
-    switch (obj->type) {
+__device__ float3 device::GetRandomLightPosition(TraceParams *params, LightObject *light) {
+    switch (light->type) {
         case LIGHT:
-            Light *light = (Light *)((uint64_t)(params->obj_chunk) + obj->offset);
-            return light->position;
-            
-        //case SPHERE:
-            //return GetRandomLightPosition((Sphere *)((uint64_t)(params->obj_chunk) + obj->offset));
+            Light *ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            return ptlt->position;
     }
     
     return make_float3(0.0f, 0.0f, 0.0f);
@@ -374,8 +377,7 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
 
     // sample each light direct_samples times
     for (uint64_t i = 0; i < params->num_lights; i++) {
-        uint64_t light_id = params->light_list[i];
-        MetaObject light = params->meta_chunk[light_id];
+        LightObject light = params->light_list[i];
         float3 light_clr = GetLightColor(params, &light);    
         
         // record each sample

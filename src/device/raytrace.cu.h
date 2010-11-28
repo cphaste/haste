@@ -52,8 +52,8 @@ namespace device {
     __device__ void SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
     __device__ void BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
     __device__ Surface* GetSurface(Intersection *obj);
-    __device__ float3 GetLightColor(TraceParams *params, MetaObject *obj);
-    __device__ float3 GetRandomLightPosition(TraceParams *params, MetaObject *obj);
+    __device__ float3 GetLightColor(TraceParams *params, LightObject *light);
+    __device__ float3 GetRandomLightPosition(TraceParams *params, LightObject *light);
 
     // shading functions
     __device__ void DirectShading(TraceParams *params, Ray *ray, Intersection *obj);

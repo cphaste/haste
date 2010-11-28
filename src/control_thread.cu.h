@@ -12,6 +12,7 @@
 #include "host.h"
 #include "device/raytrace.cu.h"
 #include "scene/metaobject.h"
+#include "scene/lightobject.h"
 #include "util/render.h"
 #include "util/camera.h"
 #include "util/vectors.h"
@@ -48,7 +49,7 @@ private:
     int _num_blocks; // number of blocks to launch each kernel with
     float3 *_layer_buffers; // base pointer to all the device's layer buffers
     MetaObject *_meta_chunk; // base pointer to the device's meta chunk
-    uint64_t *_light_list; // base pointer to the host's list of light-emitting objects
+    LightObject *_light_list; // base pointer to the host's list of light-emitting objects
     void *_obj_chunk; // base pointer to the device's object chunk
     std::queue<Ray *> _ray_queue; // queue of rays to be traced
     uint64_t _total_rays; // total count of all the rays traced by this thread

@@ -116,6 +116,7 @@ void ControlThread::AllocateLayerBuffers() {
         float3 *layer = (float3 *) ((uint64_t)(_layer_buffers) + layer_offset);
         CUDA_SAFE_CALL(cudaMemcpy(layer, zeroed, sizeof(float3) * _width * host::render.size.y, cudaMemcpyHostToDevice));
     }
+    free(zeroed);
 }
 
 void ControlThread::DestroyLayerBuffers() {
@@ -134,10 +135,10 @@ void ControlThread::CopySceneToDevice() {
     CUDA_SAFE_CALL(cudaMemcpy(_meta_chunk, host::meta_chunk, sizeof(MetaObject) * host::num_objs, cudaMemcpyHostToDevice));
     
     // allocate space for the light list on the device
-    CUDA_SAFE_CALL(cudaMalloc<uint64_t>(&_light_list, sizeof(uint64_t) * host::num_lights));
+    CUDA_SAFE_CALL(cudaMalloc<LightObject>(&_light_list, sizeof(LightObject) * host::num_lights));
     
     // copy the light list to the device
-    CUDA_SAFE_CALL(cudaMemcpy(_light_list, host::light_list, sizeof(uint64_t) * host::num_lights, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(_light_list, host::light_list, sizeof(LightObject) * host::num_lights, cudaMemcpyHostToDevice));
     
     // allocate space on the device for the object chunk
     CUDA_SAFE_CALL(cudaMalloc(&_obj_chunk, host::obj_chunk_size));

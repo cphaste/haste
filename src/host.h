@@ -19,6 +19,7 @@
 #include "util/vectors.h"
 #include "util/ray.h"
 #include "scene/metaobject.h"
+#include "scene/lightobject.h"
 
 namespace host {
     extern Render render; // global render options
@@ -26,7 +27,7 @@ namespace host {
     extern lua_State *lstate; // global lua interpreter state
     extern MetaObject *meta_chunk; // base pointer to the host's meta chunk
     extern uint64_t num_objs; // number of objects in the scene
-    extern uint64_t *light_list; // base pointer to the host's list of light-emitting objects
+    extern LightObject *light_list; // base pointer to the host's list of light-emitting objects
     extern uint64_t num_lights; // number of light emitting objects in the scene
     extern void *obj_chunk; // base pointer to the host's object chunk
     extern uint64_t obj_chunk_size; // current size (in bytes) of the host's object chunk)
@@ -44,20 +45,20 @@ namespace host {
         // allocate a new metaobject
         meta_chunk = (MetaObject *)realloc(meta_chunk, (num_objs + 1) * sizeof(MetaObject));
 
-        // calculate id and populate meta object
-        uint64_t id = obj_chunk_size;
+        // calculate offset and populate meta object
+        uint64_t offset = obj_chunk_size;
         meta_chunk[num_objs].type = type;
-        meta_chunk[num_objs].offset = obj_chunk_size;
+        meta_chunk[num_objs].offset = offset;
 
         // update the number of objects and chunk size
         num_objs++;
         obj_chunk_size += sizeof(T);
 
-        return id;
+        return offset;
     }
     
     // insert a new object into the lights
-    void InsertIntoLightList(uint64_t id);
+    void InsertIntoLightList(ObjType type, uint64_t offset);
 
     // destroy the scene and free all memory
     void DestroyScene();

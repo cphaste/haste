@@ -6,7 +6,7 @@ Camera host::camera = DEFAULT_CAMERA;
 lua_State *host::lstate = NULL;
 MetaObject *host::meta_chunk = NULL;
 uint64_t host::num_objs = 0;
-uint64_t *host::light_list = NULL;
+LightObject *host::light_list = NULL;
 uint64_t host::num_lights = 0;
 void *host::obj_chunk = NULL;
 uint64_t host::obj_chunk_size = 0;
@@ -41,12 +41,14 @@ inline static int ConvertSMVer2Cores(int major, int minor)
     return -1;
 }
 
-void host::InsertIntoLightList(uint64_t id) {
+void host::InsertIntoLightList(ObjType type, uint64_t offset) {
 	// expand the light list
-	light_list = (uint64_t *)realloc(light_list, (num_lights + 1) * sizeof(uint64_t));
+	light_list = (LightObject *)realloc(light_list, (num_lights + 1) * sizeof(LightObject));
 	
-	// save the object id
-	light_list[num_lights++] = id;
+	// save the details
+	light_list[num_lights].type = type;
+	light_list[num_lights].offset = offset;
+	num_lights++;
 }
 
 void host::DestroyScene() {
