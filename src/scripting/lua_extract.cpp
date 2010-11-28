@@ -135,13 +135,13 @@ void lua_extract_ushort2(lua_State *L, int index, ushort2 *dest) {
     lua_pop(L, 1);
 }
 
-void lua_extract_surface(lua_State *L, int index, Surface *dest) {
-    if (!lua_istable(L, index)) luaL_error(L, "expected table for Surface value");
+void lua_extract_material(lua_State *L, int index, Material *dest) {
+    if (!lua_istable(L, index)) luaL_error(L, "expected table for Material value");
     
     // extract color
     lua_getfield(L, index, "color");
     if (lua_isnil(L, -1)) {
-        dest->color = DEFAULT_SURFACE.color;
+        dest->color = DEFAULT_MATERIAL.color;
     } else {
         lua_extract_float3(L, -1, &((*dest).color));
     }
@@ -150,9 +150,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract emissive
     lua_getfield(L, index, "emissive");
     if (lua_isnil(L, -1)) {
-        dest->emissive = DEFAULT_SURFACE.emissive;
+        dest->emissive = DEFAULT_MATERIAL.emissive;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as emissive element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as emissive element of Material value");
         dest->emissive = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -160,9 +160,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract ambient
     lua_getfield(L, index, "ambient");
     if (lua_isnil(L, -1)) {
-        dest->ambient = DEFAULT_SURFACE.ambient;
+        dest->ambient = DEFAULT_MATERIAL.ambient;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ambient element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ambient element of Material value");
         dest->ambient = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -170,9 +170,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract diffuse
     lua_getfield(L, index, "diffuse");
     if (lua_isnil(L, -1)) {
-        dest->diffuse = DEFAULT_SURFACE.diffuse;
+        dest->diffuse = DEFAULT_MATERIAL.diffuse;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as diffuse element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as diffuse element of Material value");
         dest->diffuse = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -180,9 +180,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract specular
     lua_getfield(L, index, "specular");
     if (lua_isnil(L, -1)) {
-        dest->specular = DEFAULT_SURFACE.specular;
+        dest->specular = DEFAULT_MATERIAL.specular;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as specular element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as specular element of Material value");
         dest->specular = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -190,9 +190,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract shininess
     lua_getfield(L, index, "shininess");
     if (lua_isnil(L, -1)) {
-        dest->shininess = DEFAULT_SURFACE.shininess;
+        dest->shininess = DEFAULT_MATERIAL.shininess;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as shininess element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as shininess element of Material value");
         dest->shininess = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -200,9 +200,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract reflective
     lua_getfield(L, index, "reflective");
     if (lua_isnil(L, -1)) {
-        dest->reflective = DEFAULT_SURFACE.reflective;
+        dest->reflective = DEFAULT_MATERIAL.reflective;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as reflective element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as reflective element of Material value");
         dest->reflective = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -210,9 +210,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract transmissive
     lua_getfield(L, index, "transmissive");
     if (lua_isnil(L, -1)) {
-        dest->transmissive = DEFAULT_SURFACE.transmissive;
+        dest->transmissive = DEFAULT_MATERIAL.transmissive;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as transmissive element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as transmissive element of Material value");
         dest->transmissive = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -220,9 +220,9 @@ void lua_extract_surface(lua_State *L, int index, Surface *dest) {
     // extract ior
     lua_getfield(L, index, "ior");
     if (lua_isnil(L, -1)) {
-        dest->ior = DEFAULT_SURFACE.ior;
+        dest->ior = DEFAULT_MATERIAL.ior;
     } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ior element of Surface value");
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as ior element of Material value");
         dest->ior = (float)lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
@@ -301,7 +301,7 @@ void lua_extract_light(lua_State *L, int index, Light *dest) {
     lua_pop(L, 1);
 }
 
-void lua_extract_sphere(lua_State *L, int index, Sphere *dest) {
+void lua_extract_sphere(lua_State *L, int index, Sphere *dest, Material *mat) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Sphere value");
     
     // extract position
@@ -323,11 +323,11 @@ void lua_extract_sphere(lua_State *L, int index, Sphere *dest) {
     }
     lua_pop(L, 1);
     
-    // extract surface
-    lua_extract_surface(L, index, &((*dest).surface));
+    // extract material
+    lua_extract_material(L, index, mat);
 }
 
-void lua_extract_plane(lua_State *L, int index, Plane *dest) {
+void lua_extract_plane(lua_State *L, int index, Plane *dest, Material *mat) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Plane value");
     
     // extract normal
@@ -349,11 +349,11 @@ void lua_extract_plane(lua_State *L, int index, Plane *dest) {
     }
     lua_pop(L, 1);
     
-    // extract surface
-    lua_extract_surface(L, index, &((*dest).surface));
+    // extract material
+    lua_extract_material(L, index, mat);
 }
 
-void lua_extract_triangle(lua_State *L, int index, Triangle *dest) {
+void lua_extract_triangle(lua_State *L, int index, Triangle *dest, Material *mat) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Triangle value");
     
     // extract vertex1
@@ -413,6 +413,6 @@ void lua_extract_triangle(lua_State *L, int index, Triangle *dest) {
     lua_pop(L, 1);
     dest->normal3 = normalize(dest->normal3);
     
-    // extract surface
-    lua_extract_surface(L, index, &((*dest).surface));
+    // extract material
+    lua_extract_material(L, index, mat);
 }

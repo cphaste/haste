@@ -6,6 +6,7 @@
 
 #include "host.h"
 #include "lua_extract.h"
+#include "util/material.h"
 #include "scene/objtypes.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"

@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 
 #include "util/traceparams.h"
-#include "util/surface.h"
+#include "util/material.h"
 #include "util/render.h"
 #include "scene/objtypes.h"
 #include "scene/light.h"
@@ -51,7 +51,7 @@ namespace device {
     __device__ float3 GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer);
     __device__ void SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
     __device__ void BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
-    __device__ Surface* GetSurface(Intersection *obj);
+    __device__ Material* GetMaterial(TraceParams *params, Intersection *obj);
     __device__ float3 GetLightColor(TraceParams *params, LightObject *light);
     __device__ float3 GetRandomLightPosition(TraceParams *params, LightObject *light);
 

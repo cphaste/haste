@@ -10,6 +10,7 @@ ControlThread::ControlThread(int device_id, uint16_t start, uint16_t width) :
     _layer_buffers(NULL),
     _meta_chunk(NULL),
     _light_list(NULL),
+    _mat_list(NULL),
     _obj_chunk(NULL),
     _total_rays(0),
     _ray_packet(NULL),
@@ -139,7 +140,13 @@ void ControlThread::CopySceneToDevice() {
     
     // copy the light list to the device
     CUDA_SAFE_CALL(cudaMemcpy(_light_list, host::light_list, sizeof(LightObject) * host::num_lights, cudaMemcpyHostToDevice));
-    
+   
+    // allocate space for the material list on the device
+    CUDA_SAFE_CALL(cudaMalloc<Material>(&_mat_list, sizeof(Material) * host::num_mats));
+
+    // copy the material list to the device
+    CUDA_SAFE_CALL(cudaMemcpy(_mat_list, host::mat_list, sizeof(Material) * host::num_mats, cudaMemcpyHostToDevice));
+
     // allocate space on the device for the object chunk
     CUDA_SAFE_CALL(cudaMalloc(&_obj_chunk, host::obj_chunk_size));
 
@@ -157,6 +164,10 @@ void ControlThread::RemoveSceneFromDevice() {
    		CUDA_SAFE_CALL(cudaFree(_light_list));
    		_light_list = NULL;
    	}
+    if (_mat_list != NULL) {
+        CUDA_SAFE_CALL(cudaFree(_mat_list));
+        _mat_list = NULL;
+    }
     if (_obj_chunk != NULL) {
     	CUDA_SAFE_CALL(cudaFree(_obj_chunk));
     	_obj_chunk = NULL;
@@ -252,17 +263,19 @@ void ControlThread::PrepareForPacketTrace(Ray *packet, uint32_t num_rays) {
     
     // build trace parameters
     TraceParams params;
-    params.rays = _ray_packet;
-    params.num_rays = num_rays;
     params.render = host::render;
-    params.meta_chunk = _meta_chunk;
-    params.light_list = _light_list;
-    params.obj_chunk = _obj_chunk;
-    params.num_objs = host::num_objs;
-    params.num_lights = host::num_lights;
-    params.layer_buffers = _layer_buffers;
     params.start = _start;
     params.width = _width;
+    params.rays = _ray_packet;
+    params.num_rays = num_rays;
+    params.meta_chunk = _meta_chunk;
+    params.num_objs = host::num_objs;
+    params.light_list = _light_list;
+    params.num_lights = host::num_lights;
+    params.mat_list = _mat_list;
+    params.num_mats = host::num_mats;
+    params.obj_chunk = _obj_chunk;
+    params.layer_buffers = _layer_buffers;
     
     // allocate memory on the device for it
     CUDA_SAFE_CALL(cudaMalloc<TraceParams>(&_params, sizeof(TraceParams)));

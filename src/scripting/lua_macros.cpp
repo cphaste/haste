@@ -40,13 +40,15 @@ int lua_macro_light(lua_State *L) {
 int lua_macro_sphere(lua_State *L) {
     // extract the sphere from the table
     Sphere sphere;
-    lua_extract_sphere(L, 1, &sphere);
+    Material mat;
+    lua_extract_sphere(L, 1, &sphere, &mat);
 
     // insert it into the host's scene
+    sphere.material = host::InsertIntoMaterialList(&mat);
     uint64_t offset = host::InsertIntoScene(SPHERE, &sphere);
     
     // if the sphere is emissive, insert it into the light list
-    if (sphere.surface.emissive > 0.0f) {
+    if (mat.emissive > 0.0f) {
     	host::InsertIntoLightList(SPHERE, offset);
     }
 
@@ -63,13 +65,15 @@ int lua_macro_sphere(lua_State *L) {
 int lua_macro_plane(lua_State *L) {
     // extract the plane from the table
     Plane plane;
-    lua_extract_plane(L, 1, &plane);
+    Material mat;
+    lua_extract_plane(L, 1, &plane, &mat);
 
     // insert it into the host's scene
+    plane.material = host::InsertIntoMaterialList(&mat);
     uint64_t offset = host::InsertIntoScene(PLANE, &plane);
     
     // if the plane is emissive, insert it into the light list
-    if (plane.surface.emissive > 0.0f) {
+    if (mat.emissive > 0.0f) {
     	host::InsertIntoLightList(PLANE, offset);
     }
 
@@ -86,13 +90,15 @@ int lua_macro_plane(lua_State *L) {
 int lua_macro_triangle(lua_State *L) {
     // extract the triangle from the table
     Triangle triangle;
-    lua_extract_triangle(L, 1, &triangle);
+    Material mat;
+    lua_extract_triangle(L, 1, &triangle, &mat);
 
     // insert it into the host's scene
+    triangle.material = host::InsertIntoMaterialList(&mat);
     uint64_t offset = host::InsertIntoScene(TRIANGLE, &triangle);
     
     // if the triangle is emissive, insert it into the light list
-    if (triangle.surface.emissive > 0.0f) {
+    if (mat.emissive > 0.0f) {
     	host::InsertIntoLightList(TRIANGLE, offset);
     }
 

@@ -331,16 +331,21 @@ __device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel,
     atomicAdd(addr, color.z);
 }
 
-__device__ Surface* device::GetSurface(Intersection *obj) {
+__device__ Material* device::GetMaterial(TraceParams *params, Intersection *obj) {
+    uint64_t mat_id = 0;
+
     switch (obj->type) {
         case SPHERE:
-            return &(((Sphere *)(obj->ptr))->surface);
+            mat_id = ((Sphere *)(obj->ptr))->material;
+            return &(params->mat_list[mat_id]);
             
         case PLANE:
-            return &(((Plane *)(obj->ptr))->surface);
+            mat_id = ((Plane *)(obj->ptr))->material;
+            return &(params->mat_list[mat_id]);
             
         case TRIANGLE:
-            return &(((Triangle *)(obj->ptr))->surface);
+            mat_id = ((Triangle *)(obj->ptr))->material;
+            return &(params->mat_list[mat_id]);
     }
     
     return NULL;
@@ -370,7 +375,7 @@ __device__ float3 device::GetRandomLightPosition(TraceParams *params, LightObjec
 
 __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersection *obj) {
     float3 hit_pt = evaluate(ray, obj->t);
-    Surface *surface = GetSurface(obj);
+    Material *mat = GetMaterial(params, obj);
     float3 N = Normal(obj, hit_pt);
     float contrib = ray->contrib * 1.0f / params->num_lights * 1.0f / params->render.direct_samples;
     float3 clr = {0.0f, 0.0f, 0.0f};
@@ -388,17 +393,17 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
             // diffuse component
             float NdotL = dot(N, L);
             NdotL = (NdotL > 0.0f) ? NdotL : 0.0f; // clamp to positive contributions only
-            clr.x += contrib * surface->diffuse * surface->color.x * light_clr.x * NdotL;
-            clr.y += contrib * surface->diffuse * surface->color.y * light_clr.y * NdotL;
-            clr.z += contrib * surface->diffuse * surface->color.z * light_clr.z * NdotL;
+            clr.x += contrib * mat->diffuse * mat->color.x * light_clr.x * NdotL;
+            clr.y += contrib * mat->diffuse * mat->color.y * light_clr.y * NdotL;
+            clr.z += contrib * mat->diffuse * mat->color.z * light_clr.z * NdotL;
             
             // specular component (half angle approximation)
             float3 H = normalize(L + (ray->direction * make_float3(-1.0f, -1.0f, -1.0f)));
             float NdotH = dot(N, H);
             NdotH = (NdotH > 0.0f) ? NdotH : 0.0f; // clamp to positive contributions only
-            clr.x += contrib * surface->specular * light_clr.x * pow(NdotH, 1.0f / surface->shininess);
-            clr.y += contrib * surface->specular * light_clr.y * pow(NdotH, 1.0f / surface->shininess);
-            clr.z += contrib * surface->specular * light_clr.z * pow(NdotH, 1.0f / surface->shininess);
+            clr.x += contrib * mat->specular * light_clr.x * pow(NdotH, 1.0f / mat->shininess);
+            clr.y += contrib * mat->specular * light_clr.y * pow(NdotH, 1.0f / mat->shininess);
+            clr.z += contrib * mat->specular * light_clr.z * pow(NdotH, 1.0f / mat->shininess);
         }
     }
     

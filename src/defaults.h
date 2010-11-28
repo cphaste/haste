@@ -3,7 +3,7 @@
 
 #include "util/render.h"
 #include "util/camera.h"
-#include "util/surface.h"
+#include "util/material.h"
 #include "scene/light.h"
 #include "scene/sphere.h"
 #include "scene/plane.h"
@@ -26,7 +26,7 @@ extern "C" {
         4.0f / 3.0f             // aspect ratio
     };
 
-    const Surface DEFAULT_SURFACE = {
+    const Material DEFAULT_MATERIAL = {
         {1.0f, 1.0f, 1.0f},     // color
         0.0f,                   // emissive
         0.2f,                   // ambient
@@ -46,13 +46,13 @@ extern "C" {
     const Sphere DEFAULT_SPHERE = {
         {0.0f, 0.0f, 0.0f},     // position
         1.0f,                   // radius
-        DEFAULT_SURFACE         // surface
+        0                       // material
     };
     
     const Plane DEFAULT_PLANE = {
         {0.0f, 1.0f, 0.0f},     // normal
         0.0f,                   // distance
-        DEFAULT_SURFACE         // surface
+        0                       // material
     };
     
     const Triangle DEFAULT_TRIANGLE = {
@@ -61,7 +61,8 @@ extern "C" {
         {-1.0f, -1.0f, 0.0f},   // vertex3
         {0.0f, 0.0f, 1.0f},     // normal1
         {0.0f, 0.0f, 1.0f},     // normal2
-        {0.0f, 0.0f, 1.0f}      // normal3
+        {0.0f, 0.0f, 1.0f},     // normal3
+        0                       // material
     };
 }
 

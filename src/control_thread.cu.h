@@ -17,6 +17,7 @@
 #include "util/camera.h"
 #include "util/vectors.h"
 #include "util/ray.h"
+#include "util/material.h"
 #include "util/traceparams.h"
 
 class ControlThread : public ting::Thread {
@@ -49,7 +50,8 @@ private:
     int _num_blocks; // number of blocks to launch each kernel with
     float3 *_layer_buffers; // base pointer to all the device's layer buffers
     MetaObject *_meta_chunk; // base pointer to the device's meta chunk
-    LightObject *_light_list; // base pointer to the host's list of light-emitting objects
+    LightObject *_light_list; // base pointer to the device's list of light-emitting objects
+    Material *_mat_list; // base pointer to the device's list of materials
     void *_obj_chunk; // base pointer to the device's object chunk
     std::queue<Ray *> _ray_queue; // queue of rays to be traced
     uint64_t _total_rays; // total count of all the rays traced by this thread

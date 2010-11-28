@@ -1,13 +1,13 @@
 #ifndef SCENE_PLANE_H_
 #define SCENE_PLANE_H_
 
+#include <stdint.h>
 #include <cuda_runtime.h>
-#include "util/surface.h"
 
 typedef struct Plane {
     float3 normal;
     float distance;
-    Surface surface;
+    uint64_t material;
 } Plane;
 
 #endif // SCENE_PLANE_H_

@@ -8,6 +8,8 @@ MetaObject *host::meta_chunk = NULL;
 uint64_t host::num_objs = 0;
 LightObject *host::light_list = NULL;
 uint64_t host::num_lights = 0;
+Material *host::mat_list = NULL;
+uint64_t host::num_mats = 0;
 void *host::obj_chunk = NULL;
 uint64_t host::obj_chunk_size = 0;
 
@@ -51,6 +53,23 @@ void host::InsertIntoLightList(ObjType type, uint64_t offset) {
 	num_lights++;
 }
 
+uint64_t host::InsertIntoMaterialList(Material *mat) {
+    // linear search to see if the material is already in the list
+    for (uint64_t i = 0; i < num_mats; i++) {
+        if (MaterialEqual(&(mat_list[i]), mat)) {
+            // return the reference to the existing material
+            return i;
+        }
+    }
+
+    // did not exist, so insert it into the list
+    uint64_t id = num_mats++;
+    mat_list = (Material *)realloc(mat_list, (num_mats + 1) * sizeof(Material));
+    mat_list[id] = *mat;
+
+    return id;
+}
+
 void host::DestroyScene() {
     // release host memory if it was allocated
     if (meta_chunk != NULL) {
@@ -61,6 +80,10 @@ void host::DestroyScene() {
         free(light_list);
         light_list = NULL;
     }
+    if (mat_list != NULL) {
+        free(mat_list);
+        mat_list = NULL;
+    }
     if (obj_chunk != NULL) {
         free(obj_chunk);
         obj_chunk = NULL;
@@ -69,6 +92,7 @@ void host::DestroyScene() {
     // reset counters
     num_objs = 0;
     num_lights = 0;
+    num_mats = 0;
     obj_chunk_size = 0;
 }
 

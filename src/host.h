@@ -18,6 +18,7 @@
 #include "util/camera.h"
 #include "util/vectors.h"
 #include "util/ray.h"
+#include "util/material.h"
 #include "scene/metaobject.h"
 #include "scene/lightobject.h"
 
@@ -29,6 +30,8 @@ namespace host {
     extern uint64_t num_objs; // number of objects in the scene
     extern LightObject *light_list; // base pointer to the host's list of light-emitting objects
     extern uint64_t num_lights; // number of light emitting objects in the scene
+    extern Material *mat_list; // base pointer to the host's list of materials
+    extern uint64_t num_mats; // number of unique materials in the scene
     extern void *obj_chunk; // base pointer to the host's object chunk
     extern uint64_t obj_chunk_size; // current size (in bytes) of the host's object chunk)
 
@@ -59,6 +62,10 @@ namespace host {
     
     // insert a new object into the lights
     void InsertIntoLightList(ObjType type, uint64_t offset);
+
+    // insert a material into the material list (passed by pointer for efficiency,
+    // but a copy is made so you can safely free it after this call)
+    uint64_t InsertIntoMaterialList(Material *mat);
 
     // destroy the scene and free all memory
     void DestroyScene();

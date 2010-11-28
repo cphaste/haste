@@ -7,7 +7,7 @@
 
 #include "defaults.h"
 #include "util/render.h"
-#include "util/surface.h"
+#include "util/material.h"
 #include "util/camera.h"
 #include "util/vectors.h"
 #include "scene/light.h"
@@ -24,16 +24,16 @@ void lua_extract_float3(lua_State *L, int index, float3 *dest);
 void lua_extract_float4(lua_State *L, int index, float4 *dest);
 void lua_extract_ushort2(lua_State *L, int index, ushort2 *dest);
 
-// surface extraction
-void lua_extract_surface(lua_State *L, int index, Surface *dest);
+// material extraction
+void lua_extract_material(lua_State *L, int index, Material *dest);
 
 // camera extraction
 void lua_extract_camera(lua_State *L, int index, Camera *dest);
 
 // geometry extraction
 void lua_extract_light(lua_State *L, int index, Light *dest);
-void lua_extract_sphere(lua_State *L, int index, Sphere *dest);
-void lua_extract_plane(lua_State *L, int index, Plane *dest);
-void lua_extract_triangle(lua_State *L, int index, Triangle *dest);
+void lua_extract_sphere(lua_State *L, int index, Sphere *dest, Material *mat);
+void lua_extract_plane(lua_State *L, int index, Plane *dest, Material *mat);
+void lua_extract_triangle(lua_State *L, int index, Triangle *dest, Material *mat);
 
 #endif // SCRIPTING_LUA_EXTRACT_H_
