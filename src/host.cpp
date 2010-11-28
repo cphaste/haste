@@ -4,10 +4,10 @@
 Render host::render = DEFAULT_RENDER;
 Camera host::camera = DEFAULT_CAMERA;
 lua_State *host::lstate = NULL;
-uint64_t host::num_objs = 0;
-uint64_t host::num_lights = 0;
 MetaObject *host::meta_chunk = NULL;
+uint64_t host::num_objs = 0;
 uint64_t *host::light_list = NULL;
+uint64_t host::num_lights = 0;
 void *host::obj_chunk = NULL;
 uint64_t host::obj_chunk_size = 0;
 
@@ -65,9 +65,9 @@ void host::DestroyScene() {
     }
 
     // reset counters
-    obj_chunk_size = 0;
     num_objs = 0;
     num_lights = 0;
+    obj_chunk_size = 0;
 }
 
 std::vector<int> host::QueryDevices() {

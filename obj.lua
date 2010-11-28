@@ -76,9 +76,6 @@ function obj(mesh)
 							normal3 = norms[n3]
 						}
 						
-						--print("===== TRI =====")
-					    --print("\tv1, v2, v3 = " .. verts[v1] .. ", " .. verts[v2] .. ", " .. verts[v3])
-						
 						-- add surface properties
 						for k, v in pairs(mesh) do
 							tri[k] = v

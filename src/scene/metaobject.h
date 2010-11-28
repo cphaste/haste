@@ -6,7 +6,6 @@
 #include "objtypes.h"
 
 typedef struct MetaObject {
-    uint64_t id;
     ObjType type;
 	uint64_t offset;
 } MetaObject;

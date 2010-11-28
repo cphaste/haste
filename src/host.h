@@ -24,10 +24,10 @@ namespace host {
     extern Render render; // global render options
     extern Camera camera; // scene camera
     extern lua_State *lstate; // global lua interpreter state
-    extern uint64_t num_objs; // number of objects in the scene
-    extern uint64_t num_lights; // number of light emitting objects in the scene
     extern MetaObject *meta_chunk; // base pointer to the host's meta chunk
+    extern uint64_t num_objs; // number of objects in the scene
     extern uint64_t *light_list; // base pointer to the host's list of light-emitting objects
+    extern uint64_t num_lights; // number of light emitting objects in the scene
     extern void *obj_chunk; // base pointer to the host's object chunk
     extern uint64_t obj_chunk_size; // current size (in bytes) of the host's object chunk)
 
@@ -45,12 +45,12 @@ namespace host {
         meta_chunk = (MetaObject *)realloc(meta_chunk, (num_objs + 1) * sizeof(MetaObject));
 
         // calculate id and populate meta object
-        uint64_t id = num_objs++;
-        meta_chunk[id].id = id;
-        meta_chunk[id].type = type;
-        meta_chunk[id].offset = obj_chunk_size;
+        uint64_t id = obj_chunk_size;
+        meta_chunk[num_objs].type = type;
+        meta_chunk[num_objs].offset = obj_chunk_size;
 
-        // update the object chunk size
+        // update the number of objects and chunk size
+        num_objs++;
         obj_chunk_size += sizeof(T);
 
         return id;
