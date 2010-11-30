@@ -8,6 +8,7 @@ ControlThread::ControlThread(int device_id, uint16_t start, uint16_t width) :
     _num_threads(0),
     _num_blocks(0),
     _layer_buffers(NULL),
+    _rand_states(NULL),
     _meta_chunk(NULL),
     _light_list(NULL),
     _mat_list(NULL),
@@ -85,9 +86,10 @@ void ControlThread::Run() {
     _final = GetLayerBuffer(0);
     
     // remove the scene and layer buffers from the gpu
-    printf("[%d] Cleaning up data on the device...\n", _device_id);
+    printf("[%d] Cleaning up and shutting down the device...\n", _device_id);
     RemoveSceneFromDevice();
     DestroyLayerBuffers();
+    ShutdownDevice();
     
     // control thread for this device finished
     printf("[%d] Finished.\n", _device_id);
@@ -103,6 +105,23 @@ void ControlThread::InitializeDevice() {
     CUDA_SAFE_CALL(cudaGetDeviceProperties(&device_prop, _device_id));
     _num_threads = device_prop.maxThreadsPerBlock / 2;
     _num_blocks = device_prop.multiProcessorCount * 2;
+    
+    // set the stack size to 16 KB for random number generation with CURAND
+    cudaThreadSetLimit(cudaLimitStackSize, 16384);
+    
+    // allocate space for the device for the random number generator states
+    uint32_t packet_size = _num_threads * _num_blocks;
+    CUDA_SAFE_CALL(cudaMalloc<curandState>(&_rand_states, sizeof(curandState) * packet_size));
+    
+    // initialize the random number generator states
+    device::InitRandomness<<<_num_blocks, _num_threads>>>(time(NULL), _rand_states);
+}
+
+void ControlThread::ShutdownDevice() {
+    if (_rand_states != NULL) {
+        CUDA_SAFE_CALL(cudaFree(_rand_states));
+        _rand_states = NULL;
+    }
 }
 
 void ControlThread::AllocateLayerBuffers() {
@@ -276,6 +295,7 @@ void ControlThread::PrepareForPacketTrace(Ray *packet, uint32_t num_rays) {
     params.num_mats = host::num_mats;
     params.obj_chunk = _obj_chunk;
     params.layer_buffers = _layer_buffers;
+    params.rand_states = _rand_states;
     
     // allocate memory on the device for it
     CUDA_SAFE_CALL(cudaMalloc<TraceParams>(&_params, sizeof(TraceParams)));

@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 #include <cuda_runtime.h>
+#include <curand.h>
 #include <cutil.h>
 #include <queue>
 #include "ting/Thread.hpp"
@@ -49,6 +51,7 @@ private:
     int _num_threads; // number of threads to launch each kernel with
     int _num_blocks; // number of blocks to launch each kernel with
     float3 *_layer_buffers; // base pointer to all the device's layer buffers
+    curandState *_rand_states; // pointer to the device's states of randomness
     MetaObject *_meta_chunk; // base pointer to the device's meta chunk
     LightObject *_light_list; // base pointer to the device's list of light-emitting objects
     Material *_mat_list; // base pointer to the device's list of materials
@@ -61,6 +64,9 @@ private:
     
     // sets up the device for this thread
     void InitializeDevice();
+    
+    // shuts down the device, cleaning up everything
+    void ShutdownDevice();
     
     // allocate space on the device for the layer buffers
     void AllocateLayerBuffers();

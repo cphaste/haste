@@ -66,6 +66,12 @@ __device__ float device::triarea(const float3 &a, const float3 &b, const float3 
     return sqrtf(s * (s - i) * (s - j) * (s - k));
 }
 
+// ===== randomness helpers =====
+
+__device__ curandState device::GetRandState(TraceParams *params) {
+    return params->rand_states[threadIdx.x + blockIdx.x * blockDim.x];
+}
+
 // ===== normal functions =====
 
 __device__ float3 device::Normal(Sphere *sphere, const float3 &point) {
@@ -188,7 +194,6 @@ __device__ float device::Intersect(Ray *ray, Triangle *triangle) {
         return -1.0f;
     }
     float3 p = evaluate(ray, t);
-    
 
     // compute the matrix members
     float a = triangle->vertex1.x - triangle->vertex2.x;
@@ -331,6 +336,8 @@ __device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel,
     atomicAdd(addr, color.z);
 }
 
+// ===== shading functions =====
+
 __device__ Material* device::GetMaterial(TraceParams *params, Intersection *obj) {
     uint64_t mat_id = 0;
 
@@ -352,26 +359,48 @@ __device__ Material* device::GetMaterial(TraceParams *params, Intersection *obj)
 }
 
 __device__ float3 device::GetLightColor(TraceParams *params, LightObject *light) {
+    Light *ptlt = NULL;
+    Sphere *sphere = NULL;
+    Material *mat = NULL;
+    
     switch (light->type) {
         case LIGHT:
-            Light *ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
             return ptlt->color;
+            
+        case SPHERE:
+            sphere = (Sphere *)((uint64_t)(params->obj_chunk) + light->offset);
+            mat = &(params->mat_list[sphere->material]);
+            return make_float3(mat->color.x * mat->emissive,
+                                mat->color.y * mat->emissive,
+                                mat->color.z * mat->emissive);
     }
 
     return make_float3(0.0f, 0.0f, 0.0f);
 }
 
-__device__ float3 device::GetRandomLightPosition(TraceParams *params, LightObject *light) {
+__device__ float3 device::GetRandomLightPosition(TraceParams *params, curandState *rand_state, LightObject *light) {
+    Light *ptlt = NULL;
+    Sphere *sphere = NULL;
+
     switch (light->type) {
         case LIGHT:
-            Light *ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
             return ptlt->position;
+            
+        case SPHERE:
+            sphere = (Sphere *)((uint64_t)(params->obj_chunk) + light->offset);
+            float3 dir = normalize(make_float3(curand_uniform(rand_state) - 0.5f,
+                                                curand_uniform(rand_state) - 0.5f,
+                                                curand_uniform(rand_state) - 0.5f));
+            float r = curand_uniform(rand_state) * sphere->radius;
+            return sphere->position + make_float3(dir.x * r,
+                                                   dir.y * r,
+                                                   dir.z * r);
     }
     
     return make_float3(0.0f, 0.0f, 0.0f);
 }
-
-// ===== shading functions =====
 
 __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersection *obj) {
     float3 hit_pt = evaluate(ray, obj->t);
@@ -379,6 +408,14 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
     float3 N = Normal(obj, hit_pt);
     float contrib = ray->contrib * 1.0f / params->num_lights * 1.0f / params->render.direct_samples;
     float3 clr = {0.0f, 0.0f, 0.0f};
+    
+    // bring the rand state into local memory for faster access
+    curandState rand_state = GetRandState(params);
+
+    // emissive component
+    clr.x += ray->contrib * mat->emissive * mat->color.x;
+    clr.y += ray->contrib * mat->emissive * mat->color.y;
+    clr.z += ray->contrib * mat->emissive * mat->color.z;
 
     // sample each light direct_samples times
     for (uint64_t i = 0; i < params->num_lights; i++) {
@@ -387,8 +424,25 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
         
         // record each sample
         for (uint32_t j = 0; j < params->render.direct_samples; j++) {
-            float3 light_pos = GetRandomLightPosition(params, &light);
+            float3 light_pos = GetRandomLightPosition(params, &rand_state, &light);
             float3 L = normalize(light_pos - hit_pt);
+            
+            // shadow test
+            Ray shadow_probe;
+            shadow_probe.origin = hit_pt;
+            shadow_probe.direction = L;
+            shadow_probe.origin = evaluate(&shadow_probe, EPSILON); // prevent self-intersection
+            Intersection occluder = NearestObj(&shadow_probe, params);
+            if (occluder.ptr != NULL) {
+                // is the occluder between the light and the hit point, and NOT
+                // the light itself?
+                uint64_t light_ptr = (uint64_t)(params->obj_chunk) + light.offset;
+                if (occluder.t < distance(hit_pt, light_pos) &&
+                    (uint64_t)(occluder.ptr) != light_ptr) {
+                    // yes it is, move along folks, nothing to see here
+                    continue;
+                }
+            }
             
             // diffuse component
             float NdotL = dot(N, L);
@@ -412,6 +466,13 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
 }
 
 // ===== kernel functions =====
+
+__global__ void device::InitRandomness(uint64_t seed, curandState *rand_states) {
+    uint32_t id = threadIdx.x + blockIdx.x * blockDim.x;
+    
+    // give all threads same seed, different sequence number, no offset
+    curand_init(seed, id, 0, &(rand_states[id]));
+}
 
 __global__ void device::RayTrace(TraceParams *params) {
     // compute which ray this thread should be tracing

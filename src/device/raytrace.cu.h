@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 #include "util/traceparams.h"
 #include "util/material.h"
@@ -32,6 +33,9 @@ namespace device {
     __device__ float3 normalize(const float3 &v);
     __device__ float3 evaluate(Ray *ray, float t);
     __device__ float triarea(const float3 &a, const float3 &b, const float3 &c);
+    
+    // randomness helpers
+    __device__ curandState GetRandState(TraceParams *params);
 
     // normal functions
     __device__ float3 Normal(Sphere *sphere, const float3 &point);
@@ -51,14 +55,15 @@ namespace device {
     __device__ float3 GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer);
     __device__ void SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
     __device__ void BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
-    __device__ Material* GetMaterial(TraceParams *params, Intersection *obj);
-    __device__ float3 GetLightColor(TraceParams *params, LightObject *light);
-    __device__ float3 GetRandomLightPosition(TraceParams *params, LightObject *light);
 
     // shading functions
+    __device__ Material* GetMaterial(TraceParams *params, Intersection *obj);
+    __device__ float3 GetLightColor(TraceParams *params, LightObject *light);
+    __device__ float3 GetRandomLightPosition(TraceParams *params, curandState *rand_state, LightObject *light);
     __device__ void DirectShading(TraceParams *params, Ray *ray, Intersection *obj);
 
     // kernels
+    __global__ void InitRandomness(uint64_t seed, curandState *rand_states);
     __global__ void RayTrace(TraceParams *params);
 }
 

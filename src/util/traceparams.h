@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cuda_runtime.h>
+#include <curand.h>
 
 #include "util/ray.h"
 #include "util/render.h"
@@ -24,6 +25,7 @@ typedef struct TraceParams {
     uint64_t num_mats; // number of unique materials in the scene
     void *obj_chunk; // pointer to the start of the device object chunk
     float3 *layer_buffers; // pointer to the start of the device layer buffers
+    curandState *rand_states; // states of the randomness
 } TraceParams;
 
 #endif // UTIL_TRACEPARAMS_H_
