@@ -26,6 +26,8 @@ namespace device {
     __device__ float3 operator-(const float3 &lhs, const float3 &rhs);
     __device__ float3 operator*(const float3 &lhs, const float3 &rhs);
     __device__ float3 operator/(const float3 &lhs, const float3 &rhs);
+	__device__ float3 operator/(const float3 &lhs, const float &wgt);
+	__device__ float3 operator*(const float3 &lhs, const float &wgt);
     __device__ float dot(const float3 &lhs, const float3 &rhs);
     __device__ float3 cross(const float3 &lhs, const float3 &rhs);
     __device__ float length(const float3 &v);
