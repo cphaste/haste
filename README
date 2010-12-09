@@ -1,0 +1,14 @@
+Haste is an accelerated ray tracer. Right now it uses GPUs to accerate
+tracing (specifically NVIDIA GPUs by using CUDA), but in the future it
+might use something else, like laser beams. Who knows?
+
+It started as a class project for CPE 520 (Graduate Computer Architecture)
+at Cal Poly in San Luis Obispo, CA by Bob Somers and Chris Gibson. It is
+now being expanded and used in their Masters Thesis work.
+
+It is licensed under a modified MIT license. Don't worry, the modifications
+are minimal. See the LICENSE file for details.
+
+Until our thesis work is complete (June 2011) the code is open source,
+but we are not taking outside contributions to the project. After that,
+we may start taking community input at our discretion. It depends.

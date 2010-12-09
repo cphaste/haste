@@ -1,4 +1,4 @@
-#!./lua
+#!/usr/bin/lua
 
 --[[
 
@@ -10,7 +10,7 @@ in the build process. You can just run it like so:
     ./build release         - build haste in release mode
 
 If you have any questions, just ask me:
-    rsomers@calpoly.edu
+    bob@bobsomers.com
 
 ]]--
 
