@@ -145,7 +145,7 @@ std::vector<int> host::QueryDevices() {
 }
 
 char *host::GetOutputBaseName(const char *input_filename) {
-    char *temp = basename(input_filename);
+    const char *temp = basename(input_filename);
     int name_len = strlen(temp);
 
     // find the last '.' in the file name
