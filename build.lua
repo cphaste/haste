@@ -28,7 +28,7 @@ bin.release = "bin/Release/haste"
 
 -- paths to search for including header files
 includes = {
-    "/tmp2/NVIDIA_GPU_Computing_SDK/C/common/inc",
+    "/opt/nvidia/gpusdk/C/common/inc",
     "include",
     "src"
 }
