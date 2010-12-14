@@ -15,7 +15,8 @@ extern "C" {
         1,                      // max_bounces
         1,                      // antialiasing
         10,                     // direct_samples
-        10                      // indirect_samples
+        10,                     // indirect_samples
+        1.0f                    // gamma correction factor
     };
 
     const Camera DEFAULT_CAMERA = {

@@ -73,6 +73,7 @@ libdirs = {
 
 -- static libraries to link
 libs = {
+    "m",
     "dl",
     "luajit"
 }

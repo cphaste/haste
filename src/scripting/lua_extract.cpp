@@ -51,6 +51,15 @@ void lua_extract_render(lua_State *L, int index, Render *dest) {
         dest->indirect_samples = (uint32_t)lua_tonumber(L, -1);
         if (dest->indirect_samples < 1) luaL_error(L, "indirect_samples cannot be less than 1");
     }
+    
+    // extract gamma correction factor
+    lua_getfield(L, index, "gamma_correction");
+    if (lua_isnil(L, -1)) {
+        dest->gamma_correction = DEFAULT_RENDER.gamma_correction; 
+    } else {
+        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as gamma_correction element of Render value");
+        dest->gamma_correction = (float)lua_tonumber(L, -1);
+    }
 }
 
 void lua_extract_float2(lua_State *L, int index, float2 *dest) {

@@ -10,6 +10,7 @@ typedef struct Render {
     uint32_t antialiasing; // antialiasing grid size (if this is n, it will stochastically sample a n x n grid)
     uint32_t direct_samples; // number of samples to take per light for direct lighting
     uint32_t indirect_samples; // number of samples to take for indirect lighting
+    float gamma_correction; // gamma correction factor to use during final image output
 } Render;
 
 #endif // UTIL_RENDER_H_

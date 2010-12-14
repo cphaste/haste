@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     }
     printf("Control threads merged, %lu rays cast.\n", ray_sum);
     
-    // merge into final image
+    // merge into final image and apply gamma correction
     printf("Assembling final image...\n");
     float3 *img = (float3 *)malloc(sizeof(float3) * host::render.size.x * host::render.size.y);
     for (uint16_t x = 0; x < host::render.size.x; x++) {
@@ -50,6 +50,11 @@ int main(int argc, char *argv[]) {
             float3 *src = (float3 *)((uint64_t)threads[src_thread]->final() + src_offset);
             
             memcpy(dest, src, sizeof(float3));
+
+            // apply gamma correction to the destination pixel
+            dest->x = powf(dest->x, host::render.gamma_correction);
+            dest->y = powf(dest->y, host::render.gamma_correction);
+            dest->z = powf(dest->z, host::render.gamma_correction);
         }
     }
     char *base_filename = host::GetOutputBaseName(argv[1]);

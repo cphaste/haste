@@ -3,16 +3,17 @@ dofile "obj.lua"
 
 -- render configuration
 render {
-    size = {800, 600},
+    size = {1024, 768},
     max_bounces = 2,
-    antialiasing = 2,
-    direct_samples = 10
+    antialiasing = 3,
+    direct_samples = 256,
+    gamma_correction = 1 / 2.2
 }
 
 -- camera setup
 camera {
-	eye = {1.0, 0.5, 1.0},
-	look = {0, 0.25, 0}
+	eye = {0, 3, 10},
+	look = {0, 0, 0}
 }
 
 -- simple pointlight, using defaults
@@ -23,13 +24,13 @@ camera {
 -- sphere area light
 
 arealt = sphere {
-    position = {0, 4, 0},
+    position = {0, 4, -6},
     radius = 2.5,
-    color = {1.0, 1.0, 1.0},
-    emissive = 1.0,
-    ambient = 0.0,
-    diffuse = 0.2,
-    specular = 0.0
+    color = {1, 1, 1},
+    emissive = 1,
+    ambient = 0,
+    diffuse = 0,
+    specular = 0
 }
 
 --[[
@@ -102,16 +103,16 @@ tri2 = triangle{
 
 	color={1.0,1.0,1.0}
 }
---[[]]--
+]]--
 -- bunny mesh
-bunny = obj {
+--[[bunny = obj {
     mesh = "girl.obj",
     color = {1.0, 1.0, 1.0},
     specular = 0.0,
     shininess = 0.01
-}
+}]]--
 
---[[ball = sphere {
+ball = sphere {
     position = {-3, 0, 0},
     radius = 1,
     color = {1.0, 0.0, 0.0},
@@ -133,4 +134,4 @@ ball3 = sphere {
     color = {0.0, 0.0, 1.0},
     specular = 0.4,
     shininess = 0.01
-}]]--
+}
