@@ -1,12 +1,12 @@
 -- import obj mesh type
-require "helpers/obj.lua"
+require "helpers/obj"
 
 -- render configuration
 render {
-    size = {640, 480},
+    size = {1024, 768},
     max_bounces = 2,
-    antialiasing = 1,
-    direct_samples = 32,
+    antialiasing = 3,
+    direct_samples = 256,
     gamma_correction = 1 / 2.2
 }
 
