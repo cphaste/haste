@@ -2,12 +2,14 @@
 
 --[[
 
-No need to edit this file unless you are changing something drastic
-in the build process. You can just run it like so:
+This is a custom build script to compile haste using nvcc, the CUDA compiler.
+It uses some Lua logic to generate a Makefile and executes it automatically.
+It can be run as follows:
 
-    ./build                 - build haste in default mode (debug at the moment)
-    ./build debug           - build haste in debug mode
-    ./build release         - build haste in release mode
+    ./build.lua                 - build haste in default mode (debug at the moment)
+    ./build.lua debug           - build haste in debug mode
+    ./build.lua release         - build haste in release mode
+    ./build.lua clean           - cleanup everything
 
 If you have any questions, just ask me:
     bob@bobsomers.com
@@ -18,112 +20,167 @@ If you have any questions, just ask me:
 --                          MAKEFILE SETTINGS                           --
 --------------------------------------------------------------------------
 
--- compiler
-cxx = "nvcc"
+-- C++ and CUDA source files and directory
+srcdir = "src"
+srcs = {
+    "control_thread.cu",
+    "host.cpp",
+    "main.cpp",
+    "scripting.cpp",
+    "device/raytrace.cu",
+    "scripting/lua_extract.cpp",
+    "scripting/lua_macros.cpp",
+    "util/image.cpp",
+}
 
 -- binary names
-bin = {}
-bin.debug = "bin/Debug/haste"
-bin.release = "bin/Release/haste"
+bin = {
+    debug = "hasteD",
+    release = "haste"
+}
 
 -- paths to search for including header files
 includes = {
     "/opt/nvidia/gpusdk/C/common/inc",
     "include",
-    "src"
+    "src",
+
+    debug = {
+        -- nothing special
+    },
+    release = {
+        -- nothing special
+    }
 }
 
 -- preprocessor defines
-defines = {}
-defines.debug = {
-    "DEBUG"
-}
-defines.release = {
-    "RELEASE",
-    "NDEBUG"
+defines = {
+    debug = {
+        "DEBUG"
+    },
+    release = {
+        "RELEASE",
+        "NDEBUG"
+    }
 }
 
 -- compiler options
-cxxflags = {}
-cxxflags.debug = {
-    "c",                -- CUDA compile
-    "m64",              -- 64-bit arch
-    "arch=compute_20",  -- compute capability
-    "code=sm_20",       -- device code generation version
-    "g",                -- host debug symbols
-    "G",                -- device debug symbols
-    "pg",               -- gprof profiling
-}
-cxxflags.release = {
-    "c",                -- CUDA compile
-    "m64",              -- 64-bit arch
-    "arch=compute_20",  -- compute capability
-    "code=sm_20",       -- device code generation version
-    "O3",               -- optimizer level 3
-    "use_fast_math"     -- fast math library
+cflags = {
+    "m64",                  -- 64-bit arch
+    "arch=compute_20",      -- compute capability
+    "code=sm_20",           -- device code generation version
+
+    debug = {
+        "g",                -- host debug symbols
+        "G",                -- device debug symbols
+        "pg",               -- gprof profiling
+        "Xcompiler -Wall"   -- All warnings to g++, must be last
+    },
+    release = {
+        "O3",               -- optimizer level 3
+        "use_fast_math",    -- fast math library
+        "Xcompiler -Wall"   -- All warnings to g++, must be last
+    }
 }
 
--- object file directory
-objdir = "obj"
+-- object files location
+objdir = {
+    debug = "obj/debug",
+    release = "obj/release"
+}
 
 -- static library directories
 libdirs = {
-    "lib"
+    "lib",
+    
+    debug = {
+        -- nothing special
+    },
+    release = {
+        -- nothing special
+    }
 }
 
 -- static libraries to link
 libs = {
-    "m",
-    "dl",
-    "luajit"
+    "m",                    -- math library
+    "dl",                   -- dynamic linking
+    "luajit",               -- fast lua
+    
+    debug = {
+        -- nothing special
+    },
+    release = {
+        -- nothing special
+    }
 }
 
 -- linker flags
-ldflags = {
-    "link",             -- CUDA link
-    "m64"               -- 64-bit arch
+lflags = {
+    "m64",                  -- 64-bit arch
+    
+    debug = {
+        -- nothing special
+    },
+    release = {
+        -- nothing special
+    }
 }
 
 --------------------------------------------------------------------------
 --                   DO NOT EDIT BELOW THIS LINE!                       --
 --------------------------------------------------------------------------
 
+-- function for generating nvcc command line options from tables
+function genopts(both, additional, sep, desc)
+    io.write(desc .. "... ")
+    io.flush()
+    
+    local gen = ""
+    
+    if #both > 0 then
+        gen = gen .. sep .. table.concat(both, sep)
+    end
+    
+    if #additional > 0 then
+        gen = gen .. sep .. table.concat(additional, sep)
+    end
+    
+    print("done.")
+    
+    return gen
+end
+
 -- check command line arguments
 mode = "debug"
 if #arg > 1 then
     print "Usage: build [debug|release]"
     return
-elseif #arg == 1 and (arg[1] == "-help" or arg[1] == "--help") then
-    print "Usage: build [debug|release]"
-    return
-elseif #arg == 1 and arg[1] == "clean" then
-    mode = "clean"
-else
-    if #arg == 1 then
-        if arg[1] == "debug" or arg[1] == "release" then
-            mode = arg[1]
-        else
-            print "Usage: build [debug|release]"
-            return
-        end
+elseif #arg == 1 then
+    if arg[1] == "-help" or arg[1] == "--help" then
+        print "Usage: build [debug|release]"
+    elseif arg[1] == "clean" or arg[1] == "debug" or arg[1] == "release" then
+        mode = arg[1]
+    else
+        print "Usage: build [debug|release]"
     end
 end
 
--- bring in source files and process them
-dofile "sources.lua"
-for i, filename in ipairs(srcs) do
-    local path, file = string.match(filename, "([^/]+)/(.+)")
+-- process source files
+sources = {}
+for i, v in ipairs(srcs) do
+    local path, file = string.match(v, "([^/]+)/(.+)")
     local extension = ""
     if path == nil then
         path = ""
-        file, extension = string.match(filename, "([^.]+)\.(.+)")
+        file, extension = string.match(v, "([^.]+)\.(.+)")
     else
         file, extension = string.match(file, "([^.]+)\.(.+)")
     end
     if path == "" then
-        srcs[i] = {path = "src" .. path, file = file, extension = extension}
+        sources[i] = {path = srcdir .. path, file = file, extension = extension}
     else
-        srcs[i] = {path = "src/" .. path, file = file, extension = extension}
+        sources[i] = {path = srcdir .. "/" .. path, file = file, extension = extension}
     end
 end
 
@@ -132,7 +189,8 @@ if mode == "clean" then
     print("========== CLEANING EVERYTHING ==========")
 
     -- remove object files
-    os.execute("rm " .. objdir .. "/*.o")
+    os.execute("rm " .. objdir.debug .. "/*.o")
+    os.execute("rm " .. objdir.release .. "/*.o")
 
     -- remove binaries
     os.execute("rm " .. bin.debug .. " " .. bin.release)
@@ -141,82 +199,93 @@ if mode == "clean" then
     os.execute("rm Makefile.debug Makefile.release")
 
     print("========== CLEAN COMPLETE ==========")
-end
-
--- DEBUG
-if mode == "debug" then
-    print("========== DEBUG BUILD STARTING ==========")
-    io.write("Generating Makefile.... ")
+else
+    if mode == "debug" then
+        print("========== DEBUG BUILD STARTING ==========")
+    
+        -- build command line options for nvcc
+        includes.gen = genopts(includes, includes.debug, " -I", "Include paths")
+        defines.gen = genopts(defines, defines.debug, " -D", "Preprocessor defines")
+        cflags.gen = " -c" .. genopts(cflags, cflags.debug, " -", "Compiler flags")
+        libdirs.gen = genopts(libdirs, libdirs.debug, " -L", "Library paths")
+        libs.gen = genopts(libs, libs.debug, " -l", "Static libraries")
+        lflags.gen = " -link" .. genopts(lflags, lflags.debug, " -", "Linker flags")
+    else
+        print("========== RELEASE BUILD STARTING ==========")
+    
+        -- build command line options for nvcc
+        includes.gen = genopts(includes, includes.release, " -I", "Include paths")
+        defines.gen = genopts(defines, defines.release, " -D", "Preprocessor defines")
+        cflags.gen = " -c" .. genopts(cflags, cflags.release, " -", "Compiler flags")
+        libdirs.gen = genopts(libdirs, libdirs.release, " -L", "Library paths")
+        libs.gen = genopts(libs, libs.release, " -l", "Static libraries")
+        lflags.gen = " -link" .. genopts(lflags, lflags.release, " -", "Linker flags")
+    end
+    
+    -- generate dependencies for each source file using nvcc
+    print("Generating dependencies for:")
+    for i, v in ipairs(sources) do
+        local filename = table.concat({v.path, "/", v.file, ".", v.extension})
+        
+        io.write("\t" .. filename .. "... ")
+        io.flush()
+        
+        local cmd = table.concat({"nvcc", includes.gen, " -M ", filename})
+        local f = io.popen(cmd)
+        sources[i].deps = f:read("*a")
+        
+        print("done.")
+    end
+    
+    -- write out makefile
+    io.write("Writing Makefile.... ")
     io.flush()
 
     -- open output file
-    local f = io.open("Makefile.debug", "w")
+    local makefilename = "Makefile." .. mode
+    local f = io.open(makefilename, "w")
 
-    -- compiler and binary name
-    f:write("CXX = ", cxx, "\n")
-    f:write("BIN = ", bin.debug, "\n")
-
-    -- include directories
-    includes.gen = ""
-    if #includes > 0 then
-        includes.gen = includes.gen .. " -I" .. table.concat(includes, " -I")
+    -- build object files list
+    local objpath = ""
+    if mode == "debug" then
+        objpath = objdir.debug
+    else
+        objpath = objdir.release
     end
-    f:write("INCDIR =", includes.gen, "\n")
-
-    -- preprocessor defines
-    defines.gen = ""
-    if #defines.debug > 0 then
-        defines.gen = defines.gen .. " -D" .. table.concat(defines.debug, " -D")
-    end
-    f:write("DEFS =", defines.gen, "\n")
-
-    -- library directory
-    libdirs.gen = ""
-    if #libdirs > 0 then
-        libdirs.gen = " -L" .. table.concat(libdirs, " -L")
-    end
-    f:write("LIBDIRS =", libdirs.gen, "\n")
-
-    -- static libraries
-    libs.gen = ""
-    if #libs > 0 then
-        --libs.gen = libs.gen .. " $(LIBDIR)/" .. table.concat(libs, " $(LIBDIR)/")
-        libs.gen = " -l" .. table.concat(libs, " -l")
-    end
-    f:write("LIBS =", libs.gen, "\n")
-
-    -- compiler flags
-    cxxflags.gen = ""
-    if #cxxflags.debug > 0 then
-        cxxflags.gen = cxxflags.gen .. " -" .. table.concat(cxxflags.debug, " -")
-    end
-    cxxflags.gen = cxxflags.gen .. " $(INCDIR) $(DEFS) -Xcompiler -Wall"
-    f:write("CXXFLAGS =", cxxflags.gen, "\n")
-
-    -- linker flags
-    ldflags.gen = ""
-    if #ldflags > 0 then
-        ldflags.gen = ldflags.gen .. " -" .. table.concat(ldflags, " -")
-    end
-    f:write("LDFLAGS =", ldflags.gen, "\n")
-
-    -- object files list
     local objs = ""
-    for i, file in ipairs(srcs) do
-        objs = table.concat({objs, " ", objdir, "/", file.file, ".o"})
+    for i, v in ipairs(sources) do
+        local filename = table.concat({objpath, "/", v.file, ".o"})
+        objs = table.concat({objs, " ", filename})
     end
-    f:write("OBJS =", objs, "\n")
 
-    -- linker stage
-    f:write("\nall: $(OBJS)\n")
-    f:write("\t$(CXX) $(LDFLAGS) $(LIBDIRS) $(LIBS) $(OBJS) -o $(BIN)\n")
+    -- write out "all" rule
+    local binary = ""
+    if mode == "debug" then
+        binary = bin.debug
+    else
+        binary = bin.release
+    end
+    f:write(table.concat({"\nall:", objs, "\n"}))
+    f:write(table.concat({"\tnvcc",
+                          lflags.gen,
+                          libdirs.gen,
+                          libs.gen,
+                          objs,
+                          " -o ",
+                          binary,
+                          "\n\n"}))
 
-    -- compiler stage
-    for i, file in ipairs(srcs) do
-        local obj = table.concat({objdir, "/", file.file, ".o"})
-        local src = table.concat({file.path, "/", file.file, ".", file.extension})
-        f:write("\n", obj, ": ", src, "\n");
-        f:write("\t$(CXX) $(CXXFLAGS) -o $@ ", src, "\n")
+    -- write out individual file rules
+    for i, v in ipairs(sources) do
+        local filename = table.concat({v.path, "/", v.file, ".", v.extension})
+        f:write(table.concat({objpath, "/", v.deps}))
+        f:write(table.concat({"\tnvcc",
+                              cflags.gen,
+                              includes.gen,
+                              defines.gen,
+                              " -o $@ ",
+                              filename,
+                              "\n\n"})) 
     end
 
     -- done
@@ -225,95 +294,16 @@ if mode == "debug" then
 
     -- run makefile
     print("Running make...")
-    os.execute("make -f Makefile.debug")
-
-    print("========== DEBUG BUILD COMPLETE ==========")
-end
-
--- RELEASE
-if mode == "release" then
-    print("========== RELEASE BUILD STARTING ==========")
-    io.write("Generating Makefile.... ")
-    io.flush()
-
-    -- open output file
-    local f = io.open("Makefile.release", "w")
-
-    -- compiler and binary name
-    f:write("CXX = ", cxx, "\n")
-    f:write("BIN = ", bin.release, "\n")
-
-    -- include directories
-    includes.gen = ""
-    if #includes > 0 then
-        includes.gen = includes.gen .. " -I" .. table.concat(includes, " -I")
+    local gofast = ""
+    if mode == "release" then
+        gofast = " -j 8"
     end
-    f:write("INCDIR =", includes.gen, "\n")
+    os.execute("make -f " .. makefilename .. gofast)
 
-    -- preprocessor defines
-    defines.gen = ""
-    if #defines.release > 0 then
-        defines.gen = defines.gen .. " -D" .. table.concat(defines.release, " -D")
+    if mode == "debug" then
+        print("========== DEBUG BUILD COMPLETE ==========")
+    else
+        print("========== RELEASE BUILD COMPLETE ==========")
     end
-    f:write("DEFS =", defines.gen, "\n")
-
-    -- library directory
-    libdirs.gen = ""
-    if #libdirs > 0 then
-        libdirs.gen = " -L" .. table.concat(libdirs, " -L")
-    end
-    f:write("LIBDIRS =", libdirs.gen, "\n")
-
-    -- static libraries
-    libs.gen = ""
-    if #libs > 0 then
-        --libs.gen = libs.gen .. " $(LIBDIR)/" .. table.concat(libs, " $(LIBDIR)/")
-        libs.gen = " -l" .. table.concat(libs, " -l")
-    end
-    f:write("LIBS =", libs.gen, "\n")
-
-    -- compiler flags
-    cxxflags.gen = ""
-    if #cxxflags.release > 0 then
-        cxxflags.gen = cxxflags.gen .. " -" .. table.concat(cxxflags.release, " -")
-    end
-    cxxflags.gen = cxxflags.gen .. " $(INCDIR) $(DEFS) -Xcompiler -Wall"
-    f:write("CXXFLAGS =", cxxflags.gen, "\n")
-
-    -- linker flags
-    ldflags.gen = ""
-    if #ldflags > 0 then
-        ldflags.gen = ldflags.gen .. " -" .. table.concat(ldflags, " -")
-    end
-    f:write("LDFLAGS =", ldflags.gen, "\n")
-
-    -- object files list
-    local objs = ""
-    for i, file in ipairs(srcs) do
-        objs = table.concat({objs, " ", objdir, "/", file.file, ".o"})
-    end
-    f:write("OBJS =", objs, "\n")
-
-    -- linker stage
-    f:write("\nall: $(OBJS)\n")
-    f:write("\t$(CXX) $(LDFLAGS) $(LIBDIRS) $(LIBS) $(OBJS) -o $(BIN)\n")
-
-    -- compiler stage
-    for i, file in ipairs(srcs) do
-        local obj = table.concat({objdir, "/", file.file, ".o"})
-        local src = table.concat({file.path, "/", file.file, ".", file.extension})
-        f:write("\n", obj, ": ", src, "\n");
-        f:write("\t$(CXX) $(CXXFLAGS) -o $@ ", src, "\n")
-    end
-
-    -- done
-    f:close()
-    print("done.")
-
-    -- run makefile
-    print("Running make...")
-    os.execute("make -f Makefile.release")
-
-    print("========== RELEASE BUILD COMPLETE ==========")
 end
 

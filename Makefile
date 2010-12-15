@@ -3,7 +3,8 @@
 # just fine.
 
 # Source files do not go here! Add entries to the srcs table as necessary
-# in "sources.lua". The correct Makefile syntax will be generated automatically!
+# in "build.lua". The correct Makefile syntax and dependencies will be
+# generated for you.
 
 all: debug
 
@@ -18,4 +19,4 @@ clean:
 
 help:
 	@echo "Run \"make debug\" or \"make release\" to build debug or release versions of"
-	@echo "haste. If you have any questions, ask Bob at rsomers@calpoly.edu!"
+	@echo "haste. If you have any questions, ask Bob at bob@bobsomers.com!"

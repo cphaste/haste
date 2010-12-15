@@ -1,22 +1,12 @@
-# visual studio 2010 stuff
-*.opensdf
-*.sdf
-*.suo
-*.user
-*.pdb
-/ipch
-
 # generated makefiles
 /Makefile.debug
 /Makefile.release
 
 # binaries and object files
-/bin/*
-/obj/*.o
-*.o
-
-# cuda cpp generated files
-*.cu.cpp
+/hasteD
+/haste
+/obj/debug/*.o
+/obj/release/*.o
 
 # vim swap files
 *.swp
@@ -24,25 +14,5 @@
 # ctags db files
 tags
 
-# cuda kernel binaries
-*.cubin
-
 # targa output files
 *.tga
-
-# linux libs autobuilding
-/lib/linux/*.a
-/lib/src/LuaJIT-2.0.0-beta5/src/*.o
-/lib/src/LuaJIT-2.0.0-beta5/lib/vmdef.lua
-/lib/src/LuaJIT-2.0.0-beta5/src/buildvm
-/lib/src/LuaJIT-2.0.0-beta5/src/libluajit.a
-/lib/src/LuaJIT-2.0.0-beta5/src/libluajit.so
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_bcdef.h
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_ffdef.h
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_folddef.h
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_libdef.h
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_recdef.h
-/lib/src/LuaJIT-2.0.0-beta5/src/lj_vm.s
-/lib/src/LuaJIT-2.0.0-beta5/src/luajit
-/lib/src/luabind-0.9.1/src/*.o
-/lib/src/luabind-0.9.1/src/libluabind.a
