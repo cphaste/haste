@@ -6,6 +6,7 @@
 #include <curand_kernel.h>
 
 #include "util/traceparams.h"
+#include "util/ray_packet.h"
 #include "util/material.h"
 #include "util/render.h"
 #include "scene/objtypes.h"
@@ -37,7 +38,7 @@ namespace device {
     __device__ float triarea(const float3 &a, const float3 &b, const float3 &c);
     
     // randomness helpers
-    __device__ curandState GetRandState(TraceParams *params);
+    __device__ curandState GetRandState();
 
     // normal functions
     __device__ float3 Normal(Sphere *sphere, const float3 &point);
@@ -51,22 +52,22 @@ namespace device {
     __device__ float Intersect(Ray *ray, Plane *plane);
     __device__ float Intersect(Ray *ray, Triangle *triangle);
     __device__ bool Intersect(Ray *ray, Intersection *obj);
-    __device__ Intersection NearestObj(Ray *ray, TraceParams *params);
+    __device__ Intersection NearestObj(Ray *ray);
 
     // accessor functions
-    __device__ float3 GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer);
-    __device__ void SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
-    __device__ void BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color);
+    __device__ float3 GetLayerBuffer(ushort2 pixel, uint64_t layer);
+    __device__ void SetLayerBuffer(ushort2 pixel, uint64_t layer, float3 color);
+    __device__ void BlendWithLayerBuffer(ushort2 pixel, uint64_t layer, float3 color);
 
     // shading functions
-    __device__ Material* GetMaterial(TraceParams *params, Intersection *obj);
-    __device__ float3 GetLightColor(TraceParams *params, LightObject *light);
-    __device__ float3 GetRandomLightPosition(TraceParams *params, curandState *rand_state, LightObject *light);
-    __device__ void DirectShading(TraceParams *params, Ray *ray, Intersection *obj);
+    __device__ Material* GetMaterial(Intersection *obj);
+    __device__ float3 GetLightColor(LightObject *light);
+    __device__ float3 GetRandomLightPosition(curandState *rand_state, LightObject *light);
+    __device__ void DirectShading(Ray *ray, Intersection *obj);
 
     // kernels
     __global__ void InitRandomness(uint64_t seed, curandState *rand_states);
-    __global__ void RayTrace(TraceParams *params);
+    __global__ void RayTrace(RayPacket packet);
 }
 
 #endif // DEVICE_RAYTRACE_CU_H_

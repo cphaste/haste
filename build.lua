@@ -74,11 +74,13 @@ cflags = {
         "g",                -- host debug symbols
         "G",                -- device debug symbols
         "pg",               -- gprof profiling
+        "-ptxas-options=-v",-- kernel register and memory usage
         "Xcompiler -Wall"   -- All warnings to g++, must be last
     },
     release = {
         "O3",               -- optimizer level 3
         "use_fast_math",    -- fast math library
+        "-ptxas-options=-v",-- kernel register and memory usage
         "Xcompiler -Wall"   -- All warnings to g++, must be last
     }
 }
@@ -295,9 +297,9 @@ else
     -- run makefile
     print("Running make...")
     local gofast = ""
-    if mode == "release" then
+    --[[if mode == "release" then
         gofast = " -j 8"
-    end
+    end]]--
     os.execute("make -f " .. makefilename .. gofast)
 
     if mode == "debug" then

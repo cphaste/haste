@@ -2,6 +2,7 @@
 
 namespace device {
     __device__ const float EPSILON = 0.0001f;
+    __constant__ TraceParams PARAMS;
 }
 
 // ===== math functions =====
@@ -80,8 +81,8 @@ __device__ float device::triarea(const float3 &a, const float3 &b, const float3 
 
 // ===== randomness helpers =====
 
-__device__ curandState device::GetRandState(TraceParams *params) {
-    return params->rand_states[threadIdx.x + blockIdx.x * blockDim.x];
+__device__ curandState device::GetRandState() {
+    return PARAMS.rand_states[threadIdx.x + blockIdx.x * blockDim.x];
 }
 
 // ===== normal functions =====
@@ -378,15 +379,15 @@ __device__ bool device::Intersect(Ray *ray, Intersection *obj) {
     return false;
 }
 
-__device__ Intersection device::NearestObj(Ray *ray, TraceParams *params) {
+__device__ Intersection device::NearestObj(Ray *ray) {
     Intersection closest = {SPHERE, NULL, -1.0f};
  
     // check all objects for intersections
-    for (uint64_t i = 0; i < params->num_objs; i++) {
+    for (uint64_t i = 0; i < PARAMS.num_objs; i++) {
         Intersection obj;
-        obj.type = params->meta_chunk[i].type;
+        obj.type = PARAMS.meta_chunk[i].type;
         if (obj.type == LIGHT) continue; // don't waste time on point lights
-        obj.ptr = (void *) ((uint64_t) params->obj_chunk + params->meta_chunk[i].offset);
+        obj.ptr = (void *) ((uint64_t) PARAMS.obj_chunk + PARAMS.meta_chunk[i].offset);
         if (Intersect(ray, &obj)) {
             if (closest.t < 0.0f) {
                 closest = obj;
@@ -403,87 +404,87 @@ __device__ Intersection device::NearestObj(Ray *ray, TraceParams *params) {
 
 // ===== accessor functions =====
 
-__device__ float3 device::GetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer) {
+__device__ float3 device::GetLayerBuffer(ushort2 pixel, uint64_t layer) {
     // shift pixel coord into this slice's buffer space
-    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+    ushort2 pxl = make_ushort2(pixel.x - PARAMS.start, pixel.y);
     
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
-    float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    uint64_t layer_offset = sizeof(float3) * PARAMS.width * PARAMS.render.size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * PARAMS.width);
+    float3 *clr = (float3 *)((uint64_t)(PARAMS.layer_buffers) + layer_offset + pixel_offset);
     
     return *clr;
 }
 
-__device__ void device::SetLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
+__device__ void device::SetLayerBuffer(ushort2 pixel, uint64_t layer, float3 color) {
     // shift pixel coord into this slice's buffer space
-    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+    ushort2 pxl = make_ushort2(pixel.x - PARAMS.start, pixel.y);
 
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
-    float3 *clr = (float3 *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset);
+    uint64_t layer_offset = sizeof(float3) * PARAMS.width * PARAMS.render.size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * PARAMS.width);
+    float3 *clr = (float3 *)((uint64_t)(PARAMS.layer_buffers) + layer_offset + pixel_offset);
     
     *clr = color; 
 }
 
-__device__ void device::BlendWithLayerBuffer(TraceParams *params, ushort2 pixel, uint64_t layer, float3 color) {
+__device__ void device::BlendWithLayerBuffer(ushort2 pixel, uint64_t layer, float3 color) {
     // shift pixel coord into this slice's buffer space
-    ushort2 pxl = make_ushort2(pixel.x - params->start, pixel.y);
+    ushort2 pxl = make_ushort2(pixel.x - PARAMS.start, pixel.y);
     
     // calculate memory offsets
-    uint64_t layer_offset = sizeof(float3) * params->width * params->render.size.y * layer;
-    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * params->width);
+    uint64_t layer_offset = sizeof(float3) * PARAMS.width * PARAMS.render.size.y * layer;
+    uint64_t pixel_offset = sizeof(float3) * (pxl.x + pxl.y * PARAMS.width);
     float *addr;
     
     // red component    
-    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (0 * sizeof(float)));
+    addr = (float *)((uint64_t)(PARAMS.layer_buffers) + layer_offset + pixel_offset + (0 * sizeof(float)));
     atomicAdd(addr, color.x);
     
     // green component    
-    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (1 * sizeof(float)));
+    addr = (float *)((uint64_t)(PARAMS.layer_buffers) + layer_offset + pixel_offset + (1 * sizeof(float)));
     atomicAdd(addr, color.y);
     
     // blue component    
-    addr = (float *)((uint64_t)(params->layer_buffers) + layer_offset + pixel_offset + (2 * sizeof(float)));
+    addr = (float *)((uint64_t)(PARAMS.layer_buffers) + layer_offset + pixel_offset + (2 * sizeof(float)));
     atomicAdd(addr, color.z);
 }
 
 // ===== shading functions =====
 
-__device__ Material* device::GetMaterial(TraceParams *params, Intersection *obj) {
+__device__ Material* device::GetMaterial(Intersection *obj) {
     uint64_t mat_id = 0;
 
     switch (obj->type) {
         case SPHERE:
             mat_id = ((Sphere *)(obj->ptr))->material;
-            return &(params->mat_list[mat_id]);
+            return &(PARAMS.mat_list[mat_id]);
             
         case PLANE:
             mat_id = ((Plane *)(obj->ptr))->material;
-            return &(params->mat_list[mat_id]);
+            return &(PARAMS.mat_list[mat_id]);
             
         case TRIANGLE:
             mat_id = ((Triangle *)(obj->ptr))->material;
-            return &(params->mat_list[mat_id]);
+            return &(PARAMS.mat_list[mat_id]);
     }
     
     return NULL;
 }
 
-__device__ float3 device::GetLightColor(TraceParams *params, LightObject *light) {
+__device__ float3 device::GetLightColor(LightObject *light) {
     Light *ptlt = NULL;
     Sphere *sphere = NULL;
     Material *mat = NULL;
     
     switch (light->type) {
         case LIGHT:
-            ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            ptlt = (Light *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
             return ptlt->color;
             
         case SPHERE:
-            sphere = (Sphere *)((uint64_t)(params->obj_chunk) + light->offset);
-            mat = &(params->mat_list[sphere->material]);
+            sphere = (Sphere *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
+            mat = &(PARAMS.mat_list[sphere->material]);
             return make_float3(mat->color.x * mat->emissive,
                                 mat->color.y * mat->emissive,
                                 mat->color.z * mat->emissive);
@@ -492,17 +493,17 @@ __device__ float3 device::GetLightColor(TraceParams *params, LightObject *light)
     return make_float3(0.0f, 0.0f, 0.0f);
 }
 
-__device__ float3 device::GetRandomLightPosition(TraceParams *params, curandState *rand_state, LightObject *light) {
+__device__ float3 device::GetRandomLightPosition(curandState *rand_state, LightObject *light) {
     Light *ptlt = NULL;
     Sphere *sphere = NULL;
 
     switch (light->type) {
         case LIGHT:
-            ptlt = (Light *)((uint64_t)(params->obj_chunk) + light->offset);
+            ptlt = (Light *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
             return ptlt->position;
             
         case SPHERE:
-            sphere = (Sphere *)((uint64_t)(params->obj_chunk) + light->offset);
+            sphere = (Sphere *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
             float3 dir = normalize(make_float3(curand_uniform(rand_state) - 0.5f,
                                                 curand_uniform(rand_state) - 0.5f,
                                                 curand_uniform(rand_state) - 0.5f));
@@ -515,15 +516,15 @@ __device__ float3 device::GetRandomLightPosition(TraceParams *params, curandStat
     return make_float3(0.0f, 0.0f, 0.0f);
 }
 
-__device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersection *obj) {
+__device__ void device::DirectShading(Ray *ray, Intersection *obj) {
     float3 hit_pt = evaluate(ray, obj->t);
-    Material *mat = GetMaterial(params, obj);
+    Material *mat = GetMaterial(obj);
     float3 N = Normal(obj, hit_pt);
-    float contrib = ray->contrib * 1.0f / params->num_lights * 1.0f / params->render.direct_samples;
+    float contrib = ray->contrib * 1.0f / PARAMS.num_lights * 1.0f / PARAMS.render.direct_samples;
     float3 clr = {0.0f, 0.0f, 0.0f};
     
     // bring the rand state into local memory for faster access
-    curandState rand_state = GetRandState(params);
+    curandState rand_state = GetRandState();
 
     // emissive component
     clr.x += ray->contrib * mat->emissive * mat->color.x;
@@ -531,13 +532,13 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
     clr.z += ray->contrib * mat->emissive * mat->color.z;
 
     // sample each light direct_samples times
-    for (uint64_t i = 0; i < params->num_lights; i++) {
-        LightObject light = params->light_list[i];
-        float3 light_clr = GetLightColor(params, &light);    
+    for (uint64_t i = 0; i < PARAMS.num_lights; i++) {
+        LightObject light = PARAMS.light_list[i];
+        float3 light_clr = GetLightColor(&light);    
         
         // record each sample
-        for (uint32_t j = 0; j < params->render.direct_samples; j++) {
-            float3 light_pos = GetRandomLightPosition(params, &rand_state, &light);
+        for (uint32_t j = 0; j < PARAMS.render.direct_samples; j++) {
+            float3 light_pos = GetRandomLightPosition(&rand_state, &light);
             float3 L = normalize(light_pos - hit_pt);
             
             // shadow test
@@ -545,11 +546,11 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
             shadow_probe.origin = hit_pt;
             shadow_probe.direction = L;
             shadow_probe.origin = evaluate(&shadow_probe, EPSILON); // prevent self-intersection
-            Intersection occluder = NearestObj(&shadow_probe, params);
+            Intersection occluder = NearestObj(&shadow_probe);
             if (occluder.ptr != NULL) {
                 // is the occluder between the light and the hit point, and NOT
                 // the light itself?
-                uint64_t light_ptr = (uint64_t)(params->obj_chunk) + light.offset;
+                uint64_t light_ptr = (uint64_t)(PARAMS.obj_chunk) + light.offset;
                 if (occluder.t < distance(hit_pt, light_pos) &&
                     (uint64_t)(occluder.ptr) != light_ptr) {
                     // yes it is, move along folks, nothing to see here
@@ -575,7 +576,7 @@ __device__ void device::DirectShading(TraceParams *params, Ray *ray, Intersectio
     }
     
     // blend with the layer buffer
-    BlendWithLayerBuffer(params, ray->pixel, ray->layer, clr);
+    BlendWithLayerBuffer(ray->pixel, ray->layer, clr);
 }
 
 // ===== kernel functions =====
@@ -587,19 +588,19 @@ __global__ void device::InitRandomness(uint64_t seed, curandState *rand_states) 
     curand_init(seed, id, 0, &(rand_states[id]));
 }
 
-__global__ void device::RayTrace(TraceParams *params) {
+__global__ void device::RayTrace(RayPacket packet) {
     // compute which ray this thread should be tracing
     uint32_t ray_index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (ray_index >= params->num_rays) return;
-    Ray *ray = &(params->rays[ray_index]);
+    if (ray_index >= packet.num_rays) return;
+    Ray *ray = &(packet.rays[ray_index]);
 
     // find the nearest object
-    Intersection obj = NearestObj(ray, params);
+    Intersection obj = NearestObj(ray);
 
     // if the ray hit something...
     if (obj.ptr != NULL) {
         // compute direct lighting
-        DirectShading(params, ray, &obj);
+        DirectShading(ray, &obj);
 
         // TODO: generate importance rays
 

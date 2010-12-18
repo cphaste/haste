@@ -14,8 +14,7 @@ ControlThread::ControlThread(int device_id, uint16_t start, uint16_t width) :
     _mat_list(NULL),
     _obj_chunk(NULL),
     _total_rays(0),
-    _ray_packet(NULL),
-    _params(NULL),
+    _ray_chunk(NULL),
     _final(NULL) {
     // empty
 }
@@ -33,13 +32,13 @@ void ControlThread::Run() {
     printf("[%d] Initializing device...\n", _device_id);
     InitializeDevice();
     
-    // allocate layer buffers on the gpu
-    printf("[%d] Allocating layer buffers...\n", _device_id);
-    AllocateLayerBuffers();
+    // allocate buffers on the gpu
+    printf("[%d] Allocating buffers...\n", _device_id);
+    AllocateBuffers();
 
-    // copy the scene data to the gpu
-    printf("[%d] Copying scene data to device...\n", _device_id);
-    CopySceneToDevice();
+    // copy data to the gpu
+    printf("[%d] Copying data to device...\n", _device_id);
+    CopyDataToDevice();
 
     // generate primary rays
     printf("[%d] Generating primary rays...\n", _device_id);
@@ -52,18 +51,19 @@ void ControlThread::Run() {
     do {
         // extract next packet of rays
         uint32_t num_rays = (_ray_queue.size() >= packet_size) ? packet_size : _ray_queue.size();
-        Ray *packet = (Ray *)malloc(sizeof(Ray) * num_rays);
+        Ray *chunk = (Ray *)malloc(sizeof(Ray) * num_rays);
         for (uint32_t i = 0; i < num_rays; i++) {
-            memcpy(&(packet[i]), _ray_queue.front(), sizeof(Ray));
+            memcpy(&(chunk[i]), _ray_queue.front(), sizeof(Ray));
             free(_ray_queue.front());
             _ray_queue.pop();
         }
 
-        // prepare the ray packet and trace parameters on the device
-        PrepareForPacketTrace(packet, num_rays);
+        // prepare the rays for tracing
+        CUDA_SAFE_CALL(cudaMemcpy(_ray_chunk, chunk, sizeof(Ray) * num_rays, cudaMemcpyHostToDevice));
+        RayPacket packet = {_ray_chunk, num_rays};
 
         // launch the kernel
-        device::RayTrace<<<_num_blocks, _num_threads>>>(_params);
+        device::RayTrace<<<_num_blocks, _num_threads>>>(packet);
 
         // copy output rays back from the device
         // TODO
@@ -72,8 +72,7 @@ void ControlThread::Run() {
         // TODO
 
         // clean up
-        RemovePacketTraceFromDevice();
-        free(packet);
+        free(chunk);
         
         // increment ray cast count
         _total_rays += num_rays;
@@ -86,10 +85,8 @@ void ControlThread::Run() {
     _final = GetLayerBuffer(0);
     
     // remove the scene and layer buffers from the gpu
-    printf("[%d] Cleaning up and shutting down the device...\n", _device_id);
-    RemoveSceneFromDevice();
-    DestroyLayerBuffers();
-    ShutdownDevice();
+    printf("[%d] Cleaning up...\n", _device_id);
+    CleanUp();
     
     // control thread for this device finished
     printf("[%d] Finished.\n", _device_id);
@@ -117,14 +114,7 @@ void ControlThread::InitializeDevice() {
     device::InitRandomness<<<_num_blocks, _num_threads>>>(time(NULL), _rand_states);
 }
 
-void ControlThread::ShutdownDevice() {
-    if (_rand_states != NULL) {
-        CUDA_SAFE_CALL(cudaFree(_rand_states));
-        _rand_states = NULL;
-    }
-}
-
-void ControlThread::AllocateLayerBuffers() {
+void ControlThread::AllocateBuffers() {
     // allocate one huge chunk for all the layer buffers
     CUDA_SAFE_CALL(cudaMalloc<float3>(&_layer_buffers, sizeof(float3) * _width * host::render.size.y * host::render.max_bounces));
     
@@ -137,44 +127,62 @@ void ControlThread::AllocateLayerBuffers() {
         CUDA_SAFE_CALL(cudaMemcpy(layer, zeroed, sizeof(float3) * _width * host::render.size.y, cudaMemcpyHostToDevice));
     }
     free(zeroed);
-}
-
-void ControlThread::DestroyLayerBuffers() {
-    // free device memory (if it was allocated)
-    if (_layer_buffers != NULL) {
-	    CUDA_SAFE_CALL(cudaFree(_layer_buffers));
-	    _layer_buffers = NULL;
-    }
-}
-
-void ControlThread::CopySceneToDevice() {
+    
     // allocate space for the meta chunk on the device
     CUDA_SAFE_CALL(cudaMalloc<MetaObject>(&_meta_chunk, sizeof(MetaObject) * host::num_objs));
-
-    // copy the meta chunk to the device
-    CUDA_SAFE_CALL(cudaMemcpy(_meta_chunk, host::meta_chunk, sizeof(MetaObject) * host::num_objs, cudaMemcpyHostToDevice));
     
     // allocate space for the light list on the device
     CUDA_SAFE_CALL(cudaMalloc<LightObject>(&_light_list, sizeof(LightObject) * host::num_lights));
     
+    // allocate space for the material list on the device
+    CUDA_SAFE_CALL(cudaMalloc<Material>(&_mat_list, sizeof(Material) * host::num_mats));
+    
+    // allocate space for the object chunk on the device
+    CUDA_SAFE_CALL(cudaMalloc(&_obj_chunk, host::obj_chunk_size));
+    
+    // allocate space for the ray chunk on the device
+    uint32_t packet_size = _num_threads * _num_blocks;
+    CUDA_SAFE_CALL(cudaMalloc<Ray>(&_ray_chunk, sizeof(Ray) * packet_size));
+}
+
+void ControlThread::CopyDataToDevice() {
+    // copy the meta chunk to the device
+    CUDA_SAFE_CALL(cudaMemcpy(_meta_chunk, host::meta_chunk, sizeof(MetaObject) * host::num_objs, cudaMemcpyHostToDevice));
+    
     // copy the light list to the device
     CUDA_SAFE_CALL(cudaMemcpy(_light_list, host::light_list, sizeof(LightObject) * host::num_lights, cudaMemcpyHostToDevice));
    
-    // allocate space for the material list on the device
-    CUDA_SAFE_CALL(cudaMalloc<Material>(&_mat_list, sizeof(Material) * host::num_mats));
-
     // copy the material list to the device
     CUDA_SAFE_CALL(cudaMemcpy(_mat_list, host::mat_list, sizeof(Material) * host::num_mats, cudaMemcpyHostToDevice));
 
-    // allocate space on the device for the object chunk
-    CUDA_SAFE_CALL(cudaMalloc(&_obj_chunk, host::obj_chunk_size));
-
     // copy the object chunk to the device
     CUDA_SAFE_CALL(cudaMemcpy(_obj_chunk, host::obj_chunk, host::obj_chunk_size, cudaMemcpyHostToDevice));
+    
+    // copy trace parameters to device constant memory
+    TraceParams params;
+    params.render = host::render;
+    params.start = _start;
+    params.width = _width;
+    params.meta_chunk = _meta_chunk;
+    params.num_objs = host::num_objs;
+    params.light_list = _light_list;
+    params.num_lights = host::num_lights;
+    params.mat_list = _mat_list;
+    params.num_mats = host::num_mats;
+    params.obj_chunk = _obj_chunk;
+    params.layer_buffers = _layer_buffers;
+    params.rand_states = _rand_states;
+    CUDA_SAFE_CALL(cudaMemcpyToSymbol("device::PARAMS", &params, sizeof(TraceParams)));
 }
 
-void ControlThread::RemoveSceneFromDevice() {
-    // free device memory (if it was allocated)
+void ControlThread::CleanUp() {
+    // free device layer buffer memory
+    if (_layer_buffers != NULL) {
+	    CUDA_SAFE_CALL(cudaFree(_layer_buffers));
+	    _layer_buffers = NULL;
+    }
+    
+    // free device scene memory
     if (_meta_chunk != NULL) {
     	CUDA_SAFE_CALL(cudaFree(_meta_chunk));
     	_meta_chunk = NULL;
@@ -191,6 +199,18 @@ void ControlThread::RemoveSceneFromDevice() {
     	CUDA_SAFE_CALL(cudaFree(_obj_chunk));
     	_obj_chunk = NULL;
    	}
+   	
+   	// free device ray chunk memory
+    if (_ray_chunk != NULL) {
+        CUDA_SAFE_CALL(cudaFree(_ray_chunk));
+        _ray_chunk = NULL;
+    }
+   	
+   	// free device randomness state
+   	if (_rand_states != NULL) {
+        CUDA_SAFE_CALL(cudaFree(_rand_states));
+        _rand_states = NULL;
+    }
 }
 
 void ControlThread::GeneratePrimaryRays() {
@@ -270,49 +290,6 @@ void ControlThread::GeneratePrimaryRays() {
                 }
             }
         }
-    }
-}
-
-void ControlThread::PrepareForPacketTrace(Ray *packet, uint32_t num_rays) {
-    // allocate space on the device
-    CUDA_SAFE_CALL(cudaMalloc<Ray>(&_ray_packet, sizeof(Ray) * num_rays));
-
-    // copy the packet over
-    CUDA_SAFE_CALL(cudaMemcpy(_ray_packet, packet, sizeof(Ray) * num_rays, cudaMemcpyHostToDevice));
-    
-    // build trace parameters
-    TraceParams params;
-    params.render = host::render;
-    params.start = _start;
-    params.width = _width;
-    params.rays = _ray_packet;
-    params.num_rays = num_rays;
-    params.meta_chunk = _meta_chunk;
-    params.num_objs = host::num_objs;
-    params.light_list = _light_list;
-    params.num_lights = host::num_lights;
-    params.mat_list = _mat_list;
-    params.num_mats = host::num_mats;
-    params.obj_chunk = _obj_chunk;
-    params.layer_buffers = _layer_buffers;
-    params.rand_states = _rand_states;
-    
-    // allocate memory on the device for it
-    CUDA_SAFE_CALL(cudaMalloc<TraceParams>(&_params, sizeof(TraceParams)));
-
-    // copy it to the device
-    CUDA_SAFE_CALL(cudaMemcpy(_params, &params, sizeof(TraceParams), cudaMemcpyHostToDevice));
-}
-
-void ControlThread::RemovePacketTraceFromDevice() {
-    // free device memory
-    if (_ray_packet != NULL) {
-        CUDA_SAFE_CALL(cudaFree(_ray_packet));
-        _ray_packet = NULL;
-    }
-    if (_params != NULL) {
-        CUDA_SAFE_CALL(cudaFree(_params));
-        _params = NULL;
     }
 }
 

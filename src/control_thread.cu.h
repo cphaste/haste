@@ -15,6 +15,7 @@
 #include "device/raytrace.cu.h"
 #include "scene/metaobject.h"
 #include "scene/lightobject.h"
+#include "util/ray_packet.h"
 #include "util/render.h"
 #include "util/camera.h"
 #include "util/vectors.h"
@@ -58,36 +59,23 @@ private:
     void *_obj_chunk; // base pointer to the device's object chunk
     std::queue<Ray *> _ray_queue; // queue of rays to be traced
     uint64_t _total_rays; // total count of all the rays traced by this thread
-    Ray *_ray_packet; // base pointer to the device's ray packet
-    TraceParams *_params; // base pointer to the device's trace parameters
+    Ray *_ray_chunk; // base pointer to the device's ray chunk
     float3 *_final; // image buffer for the final slice rendered by this thread
     
     // sets up the device for this thread
     void InitializeDevice();
     
-    // shuts down the device, cleaning up everything
-    void ShutdownDevice();
+    // allocate space on the device for everything
+    void AllocateBuffers();
     
-    // allocate space on the device for the layer buffers
-    void AllocateLayerBuffers();
+    // copies the host's data to the device
+    void CopyDataToDevice();
     
-    // destroys all the layer buffers on the device
-    void DestroyLayerBuffers();
-    
-    // copies the host's scene data to the device
-    void CopySceneToDevice();
-    
-    // removes the scene data from the device
-    void RemoveSceneFromDevice();
+    // clean up everything we allocated
+    void CleanUp();
     
     // fills the ray queue with primary rays cast from the camera
     void GeneratePrimaryRays();
-    
-    // copies the ray packet and trace parameters to the device in preparation for a trace
-    void PrepareForPacketTrace(Ray *packet, uint32_t num_rays);
-    
-    // clears the ray packet and trace parameters from the device
-    void RemovePacketTraceFromDevice();
     
     // extract a layer buffer from the device (this allocates memory on the host,
     // which you should free() when you're done with it)

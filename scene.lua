@@ -3,22 +3,22 @@ require "helpers/obj"
 
 -- render configuration
 render {
-    size = {1024, 768},
+    size = {800, 600},
     max_bounces = 2,
     antialiasing = 3,
-    direct_samples = 256,
+    direct_samples = 32,
     gamma_correction = 1 / 2.2
 }
 
 -- camera setup
 camera {
-	eye = {0, 3, 10},
-	look = {0, 0, 0}
+	eye = {0.75, 0.5, 1},
+	look = {0, 0.2, 0}
 }
 
 -- sphere area light
 arealt = sphere {
-    position = {0, 4, -6},
+    position = {-1, 5, 3},
     radius = 2.5,
     color = {1, 1, 1},
     emissive = 1,
@@ -29,31 +29,14 @@ arealt = sphere {
 
 -- scene floor
 floor = plane {
-    color = {0.8, 0.8, 0.8},
+    color = {0.3, 0.3, 0.3},
     distance = -0.5
 }
 
 -- colored balls
-ballR = sphere {
-    position = {-3, 0, 0},
-    radius = 1,
-    color = {1.0, 0.0, 0.0},
-    specular = 0.4,
-    shininess = 0.01
-}
-
-ballG = sphere {
-    position = {0, 0, 2},
-    radius= 1,
-    color = {0.0, 1.0, 0.0},
-    specular = 0.4,
-    shininess = 0.01
-}
-
-ballB = sphere {
-    position = {3, 0, 0},
-    radius = 1,
-    color = {0.0, 0.0, 1.0},
+head = obj {
+    mesh = "head.obj",
+    color = {0.93725, 0.81569, 0.81176},
     specular = 0.4,
     shininess = 0.01
 }
