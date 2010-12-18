@@ -97,7 +97,6 @@ __device__ float3 device::Normal(Plane *plane, const float3 &point) {
 }
 
 __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
-    /*
     // returns the smooth normal of the triangle (interpolated from vertex normals)
     // this uses the ratios of the areas of the three sub-triangles created by
     // the point to weight the normal contribution
@@ -114,108 +113,8 @@ __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
     
     // interpolate the normal
     return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
-                                  (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
-                                  (triangle->normal1.z + weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
-    */
-
-	#define X1 (float)triangle->vertex1.x
-	#define X2 (float)triangle->vertex2.x
-	#define X3 (float)triangle->vertex3.x
-
-	#define Y1 (float)triangle->vertex1.y
-	#define Y2 (float)triangle->vertex2.y
-	#define Y3 (float)triangle->vertex3.y
-
-	#define Z1 (float)triangle->vertex1.z
-	#define Z2 (float)triangle->vertex2.z
-	#define Z3 (float)triangle->vertex3.z
-
-/*
-	float u = ((float) ( (Y2 - Y3) * (point.x - X3) ) + ( (X3 - X2) * (point.y - Y3) ) ) / ( ( (Y2 - Y3) * (X1 - X3) ) + ( (X3 - X2) * (Y1 - Y3) ) );
-
-	float v = ((float) ( (Y3 - Y1) * (point.x - X3) ) + ( (X1 - X3) * (point.y - Y3) ) ) / ( ( (Y3 - Y1) * (X2 - X3) ) + ( (X1 - X3) * (Y2 - Y3) ) );
-
-	float w = 1.f - (u + v);
-*/
-/*
-	float3 U = make_float3(X1 - X2, Y1 - Y2, Z1 - Z2);
-	float3 V = make_float3(X3 - X2, Y3 - Y2, Z3 - Z2);
-	
-	float3 N = make_float3(point.x - X2, -Y2, point.z - Z2);
-
-	float dU = sqrt(pow(U.x, 2) + pow(U.y, 2) + pow(U.z, 2));
-	float dV = sqrt(pow(V.x, 2) + pow(V.y, 2) + pow(V.z, 2));
-	float dN = sqrt(pow(N.x, 2) + pow(N.y, 2) + pow(N.z, 2));
-
-	U = normalize(U);
-	N = normalize(N);
-
-	float cost = dot(N, U);
-	if(cost < 0.f) cost = 0.f;
-	if(cost > 1.f) cost = 1.f;
-
-	float t = acos(cost);
-
-	float distY = 0;
-	float distX = 0;
-
-	distX = dN * cos(t);
-	distY = dN * sin(t);
-
-	float u = distX / dU;
-	float v = distY / dV;
-	float w = 1.f - (u + v);
-	*/
-
-	float3 abcCross = cross(triangle->vertex2 - triangle->vertex1, triangle->vertex3 - triangle->vertex1);
-	float3 pbcCross = cross(triangle->vertex2 - point, triangle->vertex3 - point);
-	float3 pcaCross = cross(triangle->vertex3 - point, triangle->vertex1 - point);
-	float3 pabCross = cross(triangle->vertex1 - point, triangle->vertex2 - point);
-
-	float3 N = normalize( abcCross );
-
-	float AreaABC = dot(N, abcCross );
-
-	float AreaPBC = dot(N, pbcCross );
-	float a = AreaPBC / AreaABC;
-
-	float AreaPCA = dot(N, pcaCross );
-	float b = AreaPCA / AreaABC;
-
-	float AreaPAB = dot(N, pabCross );
-	float c = AreaPAB / AreaABC;
-
-	//float c = 1.0f - a - b;
-
-	
-	
-
-	#undef X1
-	#undef X2
-	#undef X3
-
-	#undef Y1
-	#undef Y2
-	#undef Y3
-
-	#undef Z1
-	#undef Z2
-	#undef Z3
-
-	float weight1 = a;
-	float weight2 = b;
-	float weight3 = c;
-
-	//triangle->normal1 = normalize(triangle->normal1);
-	//triangle->normal2 = normalize(triangle->normal2);
-	//triangle->normal3 = normalize(triangle->normal3);
-
-    return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
-                                  (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
-                                  (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
-
-	//float3 norm = ((triangle->normal1) * a) * ((triangle->normal2) * b) * ((triangle->normal3) * c);
-	//return normalize(norm);
+                                 (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
+                                 (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
 }
 
 __device__ float3 device::Normal(Triangle *triangle) {
