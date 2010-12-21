@@ -115,27 +115,6 @@ __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
                                  (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
 }
 
-/*__device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
-    // returns the smooth normal of the triangle (interpolated from vertex normals)
-    // this uses the ratios of the areas of the three sub-triangles created by
-    // the point to weight the normal contribution
-    // thanks to http://74.86.81.120/Community/posts.php?topic=57617
-    float area_a = triarea(point, triangle->vertex2, triangle->vertex3);
-    float area_b = triarea(triangle->vertex1, point, triangle->vertex3);
-    float area_c = triarea(triangle->vertex1, triangle->vertex2, point);
-    float area_total = area_a + area_b + area_c;
-    
-    // calculate weighting coefficients
-    float weight1 = area_a / area_total;
-    float weight2 = area_b / area_total;
-    float weight3 = area_c / area_total;
-    
-    // interpolate the normal
-    return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
-                                 (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
-                                 (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
-}*/
-
 __device__ float3 device::Normal(Triangle *triangle) {
     // returns the face normal of the triangle (NOT INTERPOLATED FROM VERTEX NORMALS!)
     float3 AB = triangle->vertex2 - triangle->vertex1;
