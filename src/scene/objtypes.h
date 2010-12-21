@@ -4,7 +4,6 @@
 typedef enum ObjType {
 	LIGHT,
     SPHERE,
-    PLANE,
     TRIANGLE
 } ObjType;
 

@@ -92,10 +92,6 @@ __device__ float3 device::Normal(Sphere *sphere, const float3 &point) {
     return normalize(normal);
 }
 
-__device__ float3 device::Normal(Plane *plane, const float3 &point) {
-    return normalize(plane->normal);
-}
-
 __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
     // returns the smooth normal of the triangle (interpolated from vertex normals)
     // this uses the ratios of the areas of the three sub-triangles created by
@@ -131,9 +127,6 @@ __device__ float3 device::Normal(Intersection *obj, const float3 &point) {
         case SPHERE:
             return Normal((Sphere *)(obj->ptr), point);
             
-        case PLANE:
-            return Normal((Plane *)(obj->ptr), point);
-            
         case TRIANGLE:
             return Normal((Triangle *)(obj->ptr), point);
     }
@@ -168,28 +161,6 @@ __device__ float device::Intersect(Ray *ray, Sphere *sphere) {
     }
 
     // does not intersect the sphere
-    return -1.0f;
-}
-
-__device__ float device::Intersect(Ray *ray, Plane *plane) {
-    // find p1 (a point on the plane) by using the formula for the point on the plane
-    // closest to the origin
-    float a = plane->normal.x;
-    float b = plane->normal.y;
-    float c = plane->normal.z;
-    float d = plane->distance;
-    float abc_sq = a * a + b * b + c * c;
-    float3 p1 = make_float3((a * d) / abc_sq,
-                             (b * d) / abc_sq,
-                             (c * d) / abc_sq);
-                             
-    // solve for t
-    float denom = dot(ray->direction, plane->normal);
-    if (denom != 0.0f) {
-        return dot((p1 - ray->origin), plane->normal) / denom;
-    }
-
-    // plane and ray are parallel, no intersection
     return -1.0f;
 }
 
@@ -261,11 +232,6 @@ __device__ bool device::Intersect(Ray *ray, Intersection *obj) {
     switch (obj->type) {
         case SPHERE:
             obj->t = Intersect(ray, (Sphere *)(obj->ptr));
-            if (obj->t > EPSILON) return true;
-            break;
-            
-        case PLANE:
-            obj->t = Intersect(ray, (Plane *)(obj->ptr));
             if (obj->t > EPSILON) return true;
             break;
             
@@ -357,10 +323,6 @@ __device__ Material* device::GetMaterial(Intersection *obj) {
     switch (obj->type) {
         case SPHERE:
             mat_id = ((Sphere *)(obj->ptr))->material;
-            return &(PARAMS.mat_list[mat_id]);
-            
-        case PLANE:
-            mat_id = ((Plane *)(obj->ptr))->material;
             return &(PARAMS.mat_list[mat_id]);
             
         case TRIANGLE:

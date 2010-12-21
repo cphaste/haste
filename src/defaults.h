@@ -6,7 +6,6 @@
 #include "util/material.h"
 #include "scene/light.h"
 #include "scene/sphere.h"
-#include "scene/plane.h"
 #include "scene/triangle.h"
 
 extern "C" {
@@ -47,12 +46,6 @@ extern "C" {
     const Sphere DEFAULT_SPHERE = {
         {0.0f, 0.0f, 0.0f},     // position
         1.0f,                   // radius
-        0                       // material
-    };
-    
-    const Plane DEFAULT_PLANE = {
-        {0.0f, 1.0f, 0.0f},     // normal
-        0.0f,                   // distance
         0                       // material
     };
     

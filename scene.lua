@@ -28,12 +28,26 @@ arealt = sphere {
 }
 
 -- scene floor
-floor = plane {
+triangle {
     color = {0.3, 0.3, 0.3},
-    distance = -0.5
+    vertex1 = {-10, -0.5, 10},
+    vertex2 = {-10, -0.5, -10},
+    vertex3 = {10, -0.5, -10},
+    normal1 = {0, 1, 0},
+    normal2 = {0, 1, 0},
+    normal3 = {0, 1, 0}
+}
+triangle {
+    color = {0.3, 0.3, 0.3},
+    vertex1 = {10, -0.5, -10},
+    vertex2 = {10, -0.5, 10},
+    vertex3 = {-10, -0.5, 10},
+    normal1 = {0, 1, 0},
+    normal2 = {0, 1, 0},
+    normal3 = {0, 1, 0}
 }
 
--- colored balls
+-- mesh
 head = obj {
     mesh = "head.obj",
     color = {0.93725, 0.81569, 0.81176},

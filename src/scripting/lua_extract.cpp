@@ -336,32 +336,6 @@ void lua_extract_sphere(lua_State *L, int index, Sphere *dest, Material *mat) {
     lua_extract_material(L, index, mat);
 }
 
-void lua_extract_plane(lua_State *L, int index, Plane *dest, Material *mat) {
-    if (!lua_istable(L, index)) luaL_error(L, "expected table for Plane value");
-    
-    // extract normal
-    lua_getfield(L, index, "normal");
-    if (lua_isnil(L, -1)) {
-        dest->normal = DEFAULT_PLANE.normal;
-    } else {
-        lua_extract_float3(L, -1, &((*dest).normal));
-    }
-    lua_pop(L, 1);
-    
-    // extract distance
-    lua_getfield(L, index, "distance");
-    if (lua_isnil(L, -1)) {
-        dest->distance = DEFAULT_PLANE.distance;
-    } else {
-        if (!lua_isnumber(L, -1)) luaL_error(L, "expected number as distance element of Plane value");
-        dest->distance = (float)lua_tonumber(L, -1);
-    }
-    lua_pop(L, 1);
-    
-    // extract material
-    lua_extract_material(L, index, mat);
-}
-
 void lua_extract_triangle(lua_State *L, int index, Triangle *dest, Material *mat) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Triangle value");
     
