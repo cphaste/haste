@@ -93,6 +93,29 @@ __device__ float3 device::Normal(Sphere *sphere, const float3 &point) {
 }
 
 __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
+    float3 abcCross = cross(triangle->vertex2 - triangle->vertex1, triangle->vertex3 - triangle->vertex1);
+    float3 pbcCross = cross(triangle->vertex2 - point, triangle->vertex3 - point);
+    float3 pcaCross = cross(triangle->vertex3 - point, triangle->vertex1 - point);
+    float3 pabCross = cross(triangle->vertex1 - point, triangle->vertex2 - point);
+
+    float3 N = normalize(abcCross);
+    float AreaABC = dot(N, abcCross);
+
+    float AreaPBC = dot(N, pbcCross);
+    float weight1 = AreaPBC / AreaABC;
+
+    float AreaPCA = dot(N, pcaCross);
+    float weight2 = AreaPCA / AreaABC;
+
+    float AreaPAB = dot(N, pabCross);
+    float weight3 = AreaPAB / AreaABC;
+
+    return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
+                                 (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
+                                 (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
+}
+
+/*__device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
     // returns the smooth normal of the triangle (interpolated from vertex normals)
     // this uses the ratios of the areas of the three sub-triangles created by
     // the point to weight the normal contribution
@@ -111,7 +134,7 @@ __device__ float3 device::Normal(Triangle *triangle, const float3 &point) {
     return normalize(make_float3((triangle->normal1.x * weight1) + (triangle->normal2.x * weight2) + (triangle->normal3.x * weight3),
                                  (triangle->normal1.y * weight1) + (triangle->normal2.y * weight2) + (triangle->normal3.y * weight3),
                                  (triangle->normal1.z * weight1) + (triangle->normal2.z * weight2) + (triangle->normal3.z * weight3)));
-}
+}*/
 
 __device__ float3 device::Normal(Triangle *triangle) {
     // returns the face normal of the triangle (NOT INTERPOLATED FROM VERTEX NORMALS!)
