@@ -288,28 +288,6 @@ void lua_extract_camera(lua_State *L, int index, Camera *dest) {
     lua_pop(L, 1);
 }
 
-void lua_extract_light(lua_State *L, int index, Light *dest) {
-	if (!lua_istable(L, index)) luaL_error(L, "expected table for Light value");
-    
-    // extract position
-    lua_getfield(L, index, "position");
-    if (lua_isnil(L, -1)) {
-        dest->position = DEFAULT_LIGHT.position;
-    } else {
-        lua_extract_float3(L, -1, &((*dest).position));
-    }
-    lua_pop(L, 1);
-    
-    // extract radius
-    lua_getfield(L, index, "color");
-    if (lua_isnil(L, -1)) {
-        dest->color = DEFAULT_LIGHT.color;
-    } else {
-        lua_extract_float3(L, -1, &((*dest).color));
-    }
-    lua_pop(L, 1);
-}
-
 void lua_extract_sphere(lua_State *L, int index, Sphere *dest, Material *mat) {
     if (!lua_istable(L, index)) luaL_error(L, "expected table for Sphere value");
     

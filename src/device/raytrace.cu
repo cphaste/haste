@@ -253,7 +253,6 @@ __device__ Intersection device::NearestObj(Ray *ray) {
     for (uint64_t i = 0; i < PARAMS.num_objs; i++) {
         Intersection obj;
         obj.type = PARAMS.meta_chunk[i].type;
-        if (obj.type == LIGHT) continue; // don't waste time on point lights
         obj.ptr = (void *) ((uint64_t) PARAMS.obj_chunk + PARAMS.meta_chunk[i].offset);
         if (Intersect(ray, &obj)) {
             if (closest.t < 0.0f) {
@@ -336,15 +335,10 @@ __device__ Material* device::GetMaterial(Intersection *obj) {
 }
 
 __device__ float3 device::GetLightColor(LightObject *light) {
-    Light *ptlt = NULL;
     Sphere *sphere = NULL;
     Material *mat = NULL;
     
     switch (light->type) {
-        case LIGHT:
-            ptlt = (Light *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
-            return ptlt->color;
-            
         case SPHERE:
             sphere = (Sphere *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
             mat = &(PARAMS.mat_list[sphere->material]);
@@ -357,14 +351,9 @@ __device__ float3 device::GetLightColor(LightObject *light) {
 }
 
 __device__ float3 device::GetRandomLightPosition(curandState *rand_state, LightObject *light) {
-    Light *ptlt = NULL;
     Sphere *sphere = NULL;
 
     switch (light->type) {
-        case LIGHT:
-            ptlt = (Light *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
-            return ptlt->position;
-            
         case SPHERE:
             sphere = (Sphere *)((uint64_t)(PARAMS.obj_chunk) + light->offset);
             float3 dir = normalize(make_float3(curand_uniform(rand_state) - 0.5f,

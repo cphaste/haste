@@ -18,7 +18,6 @@ int lua_macro_render(lua_State *L);
 int lua_macro_camera(lua_State *L);
 
 // geometry extractions
-int lua_macro_light(lua_State *L);
 int lua_macro_sphere(lua_State *L);
 int lua_macro_triangle(lua_State *L);
 

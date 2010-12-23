@@ -10,7 +10,6 @@ lua_State *scripting::Init() {
     // register macro callbacks
     lua_register(L, "render", lua_macro_render);
     lua_register(L, "camera", lua_macro_camera);
-    lua_register(L, "light", lua_macro_light);
     lua_register(L, "sphere", lua_macro_sphere);
     lua_register(L, "triangle", lua_macro_triangle);
 

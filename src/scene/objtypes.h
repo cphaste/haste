@@ -2,7 +2,6 @@
 #define SCENE_OBJTYPES_H_
 
 typedef enum ObjType {
-	LIGHT,
     SPHERE,
     TRIANGLE
 } ObjType;

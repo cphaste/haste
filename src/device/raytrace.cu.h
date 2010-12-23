@@ -10,7 +10,6 @@
 #include "util/material.h"
 #include "util/render.h"
 #include "scene/objtypes.h"
-#include "scene/light.h"
 #include "scene/sphere.h"
 #include "scene/triangle.h"
 

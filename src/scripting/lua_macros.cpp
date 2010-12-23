@@ -16,27 +16,6 @@ int lua_macro_camera(lua_State *L) {
 	return 0;
 }
 
-int lua_macro_light(lua_State *L) {
-	// extract the light from the table
-	Light light;
-	lua_extract_light(L, 1, &light);
-	
-	// insert it into the host's scene
-	uint64_t offset = host::InsertIntoScene(LIGHT, &light);
-	
-	// insert it into the light list
-	host::InsertIntoLightList(LIGHT, offset);
-	
-	// push the table back onto the stack
-	lua_pushvalue(L, 1);
-	
-	// set the id key
-	lua_pushnumber(L, (lua_Number)offset);
-	lua_setfield(L, -2, "id");
-	
-	return 1;
-}
-
 int lua_macro_sphere(lua_State *L) {
     // extract the sphere from the table
     Sphere sphere;
